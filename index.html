@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle Arena 2D - Multiplayer P2P</title>
     
-    <!-- Firebase v9 modular SDK -->
+    <!-- Firebase v10 modular SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, updateDoc, getDocs, arrayUnion, arrayRemove, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         // Firebase Configuration
         const firebaseConfig = {
@@ -27,8 +27,33 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
+        // Global variables - declared first
+        let firebaseApp = null;
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let game = null;
+        let peer = null;
+        let connection = null;
+        
+        // Initialize Firebase FIRST
+        try {
+            firebaseApp = initializeApp(firebaseConfig);
+            auth = getAuth(firebaseApp);
+            db = getFirestore(firebaseApp);
+            
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization failed:', error);
+            alert('Erro ao inicializar Firebase: ' + error.message);
+        }
+        
         // Make Firebase available globally
-        window.firebase = { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, updateDoc, serverTimestamp };
+        window.firebase = { 
+            auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, 
+            collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, 
+            updateDoc, getDocs, arrayUnion, arrayRemove, serverTimestamp 
+        };
     </script>
     <style>
         :root {
@@ -805,7 +830,7 @@
         <div class="menu">
             <h1>⚔️ Battle Arena 2D</h1>
             <p>Faça login para jogar e conectar com amigos</p>
-            <button class="btn" onclick="game.signInWithGoogle()">🔐 Login com Google</button>
+            <button class="btn" onclick="window.game && window.game.signInWithGoogle()">🔐 Login com Google</button>
             <div id="loginStatus" class="status status-info hidden">Conectando...</div>
         </div>
     </div>
@@ -819,13 +844,13 @@
                     <div id="userName">Nome do Usuário</div>
                     <div id="userEmail" class="user-email">email@example.com</div>
                 </div>
-                <button class="btn-icon" onclick="game.showFriendsPanel()" title="Amigos">👥</button>
-                <button class="btn-icon" onclick="game.signOut()" title="Logout">🚪</button>
+                <button class="btn-icon" onclick="window.game && window.game.showFriendsPanel()" title="Amigos">👥</button>
+                <button class="btn-icon" onclick="window.game && window.game.signOut()" title="Logout">🚪</button>
             </div>
-            <button class="btn" onclick="game.showHostMenu()">🎯 Host Game</button>
-            <button class="btn" onclick="game.showJoinMenu()">🔗 Join Game</button>
-            <button class="btn btn-secondary" onclick="game.showSettings()">⚙️ Settings</button>
-            <button class="btn btn-secondary" onclick="game.showInstructions()">❓ How to Play</button>
+            <button class="btn" onclick="window.game && window.game.showHostMenu()">🎯 Host Game</button>
+            <button class="btn" onclick="window.game && window.game.showJoinMenu()">🔗 Join Game</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showSettings()">⚙️ Settings</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showInstructions()">❓ How to Play</button>
         </div>
     </div>
 
@@ -835,13 +860,13 @@
             <div id="hostStatus" class="status status-info">Initializing...</div>
             <div id="roomCodeContainer" class="hidden">
                 <div class="room-code" id="roomCodeDisplay"></div>
-                <button class="btn btn-secondary" onclick="game.copyRoomCode()">📋 Copy Code</button>
+                <button class="btn btn-secondary" onclick="window.game && window.game.copyRoomCode()">📋 Copy Code</button>
             </div>
             <div id="waitingMessage" class="hidden">
                 <p>Share this code with your friends!</p>
                 <p>Waiting for players to join...</p>
             </div>
-            <button class="btn btn-secondary" onclick="game.showMainMenu()">← Back</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showMainMenu()">← Back</button>
         </div>
     </div>
 
@@ -849,10 +874,10 @@
         <div class="menu">
             <h2>Join Game</h2>
             <input type="text" id="roomCodeInput" class="input" placeholder="Enter room code or paste here" maxlength="10">
-            <button class="btn" onclick="game.pasteRoomCode()">📋 Paste Code</button>
-            <button class="btn" onclick="game.joinRoom()">Connect</button>
+            <button class="btn" onclick="window.game && window.game.pasteRoomCode()">📋 Paste Code</button>
+            <button class="btn" onclick="window.game && window.game.joinRoom()">Connect</button>
             <div id="joinStatus" class="status status-info hidden">Connecting...</div>
-            <button class="btn btn-secondary" onclick="game.showMainMenu()">← Back</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showMainMenu()">← Back</button>
         </div>
     </div>
 
@@ -866,8 +891,8 @@
                 <option value="true">On</option>
                 <option value="false">Off</option>
             </select>
-            <button class="btn" onclick="game.saveSettings()">Save Settings</button>
-            <button class="btn btn-secondary" onclick="game.showMainMenu()">← Back</button>
+            <button class="btn" onclick="window.game && window.game.saveSettings()">Save Settings</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showMainMenu()">← Back</button>
         </div>
     </div>
 
@@ -889,7 +914,7 @@
                 <p>• First to 10 kills wins!</p>
                 <p>• Respawn after 3 seconds</p>
             </div>
-            <button class="btn" onclick="game.showMainMenu()">← Back</button>
+            <button class="btn" onclick="window.game && window.game.showMainMenu()">← Back</button>
         </div>
     </div>
 
@@ -927,8 +952,8 @@
 
         <div id="pauseMenu" class="pause-menu hidden">
             <h2>Game Paused</h2>
-            <button class="btn" onclick="game.resumeGame()">▶️ Resume</button>
-            <button class="btn btn-secondary" onclick="game.showMainMenu()">🏠 Main Menu</button>
+            <button class="btn" onclick="window.game && window.game.resumeGame()">▶️ Resume</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showMainMenu()">🏠 Main Menu</button>
         </div>
     </div>
 
@@ -938,8 +963,8 @@
             <h2>Choose Your Fighter</h2>
             <div id="characterGrid" class="character-grid"></div>
             <div id="characterInfo" class="character-info"></div>
-            <button class="btn" id="confirmCharacterBtn" onclick="game.confirmCharacter()" disabled>Confirm Selection</button>
-            <button class="btn btn-secondary" onclick="game.showMainMenu()">← Back</button>
+            <button class="btn" id="confirmCharacterBtn" onclick="window.game && window.game.confirmCharacter()" disabled>Confirm Selection</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showMainMenu()">← Back</button>
         </div>
     </div>
 
@@ -960,7 +985,7 @@
                             <option value="bots">Todos vs Bots</option>
                             <option value="zombies">Ordas de Zumbis</option>
                         </select>
-                        <button class="btn" onclick="game.startMatchFromLobby()">🚀 Start Game</button>
+                        <button class="btn" onclick="window.game && window.game.startMatchFromLobby()">🚀 Start Game</button>
                     </div>
                 </div>
                 
@@ -969,7 +994,7 @@
                     <div id="chatMessages" class="chat-messages"></div>
                     <div class="chat-input">
                         <input type="text" id="chatInput" class="input" placeholder="Type a message..." maxlength="100">
-                        <button class="btn" onclick="game.sendChatMessage()">Send</button>
+                        <button class="btn" onclick="window.game && window.game.sendChatMessage()">Send</button>
                     </div>
                 </div>
             </div>
@@ -982,9 +1007,9 @@
         <div class="friends-content">
             <h3>Amigos</h3>
             <div class="friends-tabs">
-                <button class="tab-btn active" onclick="game.showFriendsTab('list')">Lista</button>
-                <button class="tab-btn" onclick="game.showFriendsTab('requests')">Pedidos</button>
-                <button class="tab-btn" onclick="game.showFriendsTab('add')">Adicionar</button>
+                <button class="tab-btn active" onclick="window.game && window.game.showFriendsTab('list')">Lista</button>
+                <button class="tab-btn" onclick="window.game && window.game.showFriendsTab('requests')">Pedidos</button>
+                <button class="tab-btn" onclick="window.game && window.game.showFriendsTab('add')">Adicionar</button>
             </div>
             
             <div id="friendsListTab" class="tab-content">
@@ -997,17 +1022,17 @@
             
             <div id="addFriendTab" class="tab-content hidden">
                 <input type="email" id="friendEmail" class="input" placeholder="Email do amigo">
-                <button class="btn" onclick="game.sendFriendRequest()">Enviar Pedido</button>
+                <button class="btn" onclick="window.game && window.game.sendFriendRequest()">Enviar Pedido</button>
                 <div id="addFriendStatus" class="status hidden"></div>
             </div>
             
-            <button class="btn btn-secondary" onclick="game.closeFriendsPanel()">Fechar</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.closeFriendsPanel()">Fechar</button>
         </div>
     </div>
 
     <!-- Fullscreen prompt for mobile -->
     <div id="fullscreenPrompt" class="fullscreen-prompt hidden">
-        <button class="btn" onclick="game.requestFullscreen()">📱 Enter Fullscreen</button>
+        <button class="btn" onclick="window.game && window.game.requestFullscreen()">📱 Enter Fullscreen</button>
     </div>
 
     <!-- Game Over Screen -->
@@ -1015,8 +1040,8 @@
         <div class="menu">
             <h2 id="gameOverTitle">Game Over!</h2>
             <div id="gameOverStats"></div>
-            <button class="btn" onclick="game.returnToLobby()">🏠 Return to Lobby</button>
-            <button class="btn btn-secondary" onclick="game.showMainMenu()">Main Menu</button>
+            <button class="btn" onclick="window.game && window.game.returnToLobby()">🏠 Return to Lobby</button>
+            <button class="btn btn-secondary" onclick="window.game && window.game.showMainMenu()">Main Menu</button>
         </div>
     </div>
 
@@ -1284,6 +1309,11 @@
 
         class BattleArena2D {
             constructor() {
+                // Wait for DOM to be fully loaded
+                if (!document.getElementById('gameCanvas')) {
+                    throw new Error('Canvas element not found');
+                }
+                
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.isHost = false;
@@ -1374,36 +1404,48 @@
                 
                 this.init();
                 this.checkFullscreenMobile();
-                this.initFirebase();
+                // Firebase will be initialized from DOMContentLoaded
             }
             
             // Firebase Authentication & Friends System
             async initFirebase() {
-                // Wait for Firebase to load
-                let attempts = 0;
-                while (!window.firebase && attempts < 50) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
-                }
-                
-                if (!window.firebase) {
-                    console.error('Firebase failed to load');
-                    return;
-                }
-                
-                const { auth, onAuthStateChanged } = window.firebase;
-                
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        this.currentUser = user;
-                        this.showMainMenu();
-                        this.loadUserData();
-                        this.setupFriendsListener();
-                    } else {
-                        this.currentUser = null;
-                        this.showLoginScreen();
+                try {
+                    // Firebase should already be initialized
+                    if (!window.firebase || !window.firebase.auth) {
+                        throw new Error('Firebase not properly initialized');
                     }
-                });
+                    
+                    const { auth, onAuthStateChanged } = window.firebase;
+                    
+                    // Setup auth state listener
+                    onAuthStateChanged(auth, async (user) => {
+                        try {
+                            if (user) {
+                                this.currentUser = user;
+                                console.log('User logged in:', user.email);
+                                await this.loadUserData();
+                                await this.setupFriendsListener();
+                                this.showMainMenu();
+                            } else {
+                                this.currentUser = null;
+                                console.log('User logged out');
+                                this.showLoginScreen();
+                            }
+                        } catch (error) {
+                            console.error('Error in auth state change:', error);
+                        }
+                    });
+                    
+                } catch (error) {
+                    console.error('Firebase initialization error:', error);
+                    document.getElementById('loginScreen').innerHTML = `
+                        <div class="menu">
+                            <h1>⚔️ Battle Arena 2D</h1>
+                            <div class="status status-error">Erro de inicialização: ${error.message}</div>
+                            <button class="btn" onclick="window.location.reload()">🔄 Recarregar Página</button>
+                        </div>
+                    `;
+                }
             }
             
             showLoginScreen() {
@@ -1413,95 +1455,203 @@
             
             async signInWithGoogle() {
                 try {
-                    document.getElementById('loginStatus').classList.remove('hidden');
-                    document.getElementById('loginStatus').textContent = 'Conectando...';
+                    const statusElement = document.getElementById('loginStatus');
+                    statusElement.classList.remove('hidden');
+                    statusElement.textContent = 'Conectando...';
+                    statusElement.className = 'status status-info';
                     
                     const { auth, GoogleAuthProvider, signInWithPopup } = window.firebase;
+                    
+                    if (!auth || !GoogleAuthProvider || !signInWithPopup) {
+                        throw new Error('Firebase auth services not available');
+                    }
+                    
                     const provider = new GoogleAuthProvider();
+                    provider.addScope('email');
+                    provider.addScope('profile');
+                    
+                    console.log('Attempting Google sign-in...');
                     const result = await signInWithPopup(auth, provider);
                     
                     this.currentUser = result.user;
+                    console.log('Sign-in successful for:', result.user.email);
+                    
                     await this.createUserProfile();
+                    
+                    statusElement.textContent = 'Login realizado com sucesso!';
+                    statusElement.className = 'status status-success';
                     
                 } catch (error) {
                     console.error('Login failed:', error);
-                    document.getElementById('loginStatus').textContent = 'Erro no login: ' + error.message;
-                    document.getElementById('loginStatus').className = 'status status-error';
+                    const statusElement = document.getElementById('loginStatus');
+                    
+                    let errorMessage = 'Erro desconhecido';
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        errorMessage = 'Login cancelado pelo usuário';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'Popup bloqueado pelo navegador';
+                    } else if (error.code === 'auth/network-request-failed') {
+                        errorMessage = 'Erro de conexão';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                    
+                    statusElement.textContent = 'Erro no login: ' + errorMessage;
+                    statusElement.className = 'status status-error';
                 }
             }
             
             async signOut() {
-                const { auth, signOut } = window.firebase;
-                await signOut(auth);
+                try {
+                    console.log('Signing out user...');
+                    const { auth, signOut } = window.firebase;
+                    
+                    // Update user status to offline
+                    if (this.currentUser && window.firebase.db) {
+                        const { db, doc, updateDoc, serverTimestamp } = window.firebase;
+                        try {
+                            await updateDoc(doc(db, 'users', this.currentUser.uid), {
+                                isOnline: false,
+                                lastOnline: serverTimestamp()
+                            });
+                        } catch (error) {
+                            console.warn('Could not update user offline status:', error);
+                        }
+                    }
+                    
+                    await signOut(auth);
+                    console.log('User signed out successfully');
+                    
+                } catch (error) {
+                    console.error('Sign out error:', error);
+                    // Force redirect to login even if signout fails
+                    this.currentUser = null;
+                    this.showLoginScreen();
+                }
             }
             
             async createUserProfile() {
-                if (!this.currentUser) return;
+                if (!this.currentUser) {
+                    console.log('No current user for profile creation');
+                    return;
+                }
                 
-                const { db, doc, setDoc, getDoc, serverTimestamp } = window.firebase;
-                const userRef = doc(db, 'users', this.currentUser.uid);
-                const userSnap = await getDoc(userRef);
-                
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        uid: this.currentUser.uid,
-                        name: this.currentUser.displayName,
-                        email: this.currentUser.email,
-                        photoURL: this.currentUser.photoURL,
-                        createdAt: serverTimestamp(),
-                        lastOnline: serverTimestamp(),
-                        friends: [],
-                        stats: {
-                            gamesPlayed: 0,
-                            wins: 0,
-                            kills: 0,
-                            deaths: 0
-                        }
-                    });
+                try {
+                    console.log('Creating/updating user profile...');
+                    const { db, doc, setDoc, getDoc, updateDoc, serverTimestamp } = window.firebase;
+                    
+                    const userRef = doc(db, 'users', this.currentUser.uid);
+                    const userSnap = await getDoc(userRef);
+                    
+                    if (!userSnap.exists()) {
+                        console.log('Creating new user profile');
+                        await setDoc(userRef, {
+                            uid: this.currentUser.uid,
+                            name: this.currentUser.displayName || 'Usuário Anônimo',
+                            email: this.currentUser.email,
+                            photoURL: this.currentUser.photoURL || '',
+                            createdAt: serverTimestamp(),
+                            lastOnline: serverTimestamp(),
+                            isOnline: true,
+                            friends: [],
+                            stats: {
+                                gamesPlayed: 0,
+                                wins: 0,
+                                kills: 0,
+                                deaths: 0
+                            }
+                        });
+                    } else {
+                        console.log('Updating existing user profile');
+                        await updateDoc(userRef, {
+                            lastOnline: serverTimestamp(),
+                            isOnline: true,
+                            name: this.currentUser.displayName || userSnap.data().name,
+                            photoURL: this.currentUser.photoURL || userSnap.data().photoURL
+                        });
+                    }
+                    
+                    console.log('User profile created/updated successfully');
+                } catch (error) {
+                    console.error('Error creating user profile:', error);
+                    throw error;
                 }
             }
             
             async loadUserData() {
-                if (!this.currentUser) return;
+                if (!this.currentUser) {
+                    console.log('No current user to load data for');
+                    return;
+                }
                 
-                // Update UI with user info
-                document.getElementById('userName').textContent = this.currentUser.displayName;
-                document.getElementById('userEmail').textContent = this.currentUser.email;
-                document.getElementById('userAvatar').src = this.currentUser.photoURL;
-                
-                this.playerName = this.currentUser.displayName;
-                this.localPlayer.name = this.playerName;
-                
-                // Update online status
-                const { db, doc, updateDoc, serverTimestamp } = window.firebase;
-                await updateDoc(doc(db, 'users', this.currentUser.uid), {
-                    lastOnline: serverTimestamp(),
-                    isOnline: true
-                });
+                try {
+                    console.log('Loading user data for:', this.currentUser.email);
+                    
+                    // Update UI with user info
+                    const userName = document.getElementById('userName');
+                    const userEmail = document.getElementById('userEmail');
+                    const userAvatar = document.getElementById('userAvatar');
+                    
+                    if (userName) userName.textContent = this.currentUser.displayName || 'Usuário';
+                    if (userEmail) userEmail.textContent = this.currentUser.email || '';
+                    if (userAvatar) {
+                        userAvatar.src = this.currentUser.photoURL || '/api/placeholder/40/40';
+                        userAvatar.onerror = () => {
+                            userAvatar.src = '/api/placeholder/40/40';
+                        };
+                    }
+                    
+                    this.playerName = this.currentUser.displayName || 'Jogador';
+                    this.localPlayer.name = this.playerName;
+                    
+                    // Update online status
+                    const { db, doc, updateDoc, serverTimestamp } = window.firebase;
+                    await updateDoc(doc(db, 'users', this.currentUser.uid), {
+                        lastOnline: serverTimestamp(),
+                        isOnline: true
+                    });
+                    
+                    console.log('User data loaded successfully');
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    // Continue anyway, don't block the UI
+                }
             }
             
             async setupFriendsListener() {
-                if (!this.currentUser) return;
+                if (!this.currentUser) {
+                    console.log('No current user for friends listener');
+                    return;
+                }
                 
-                const { db, collection, query, where, onSnapshot } = window.firebase;
-                
-                // Listen for friend requests
-                const requestsQuery = query(
-                    collection(db, 'friendRequests'),
-                    where('toUserId', '==', this.currentUser.uid),
-                    where('status', '==', 'pending')
-                );
-                
-                onSnapshot(requestsQuery, (snapshot) => {
-                    this.friendRequests = [];
-                    snapshot.forEach(doc => {
-                        this.friendRequests.push({ id: doc.id, ...doc.data() });
+                try {
+                    console.log('Setting up friends listener...');
+                    const { db, collection, query, where, onSnapshot } = window.firebase;
+                    
+                    // Listen for friend requests
+                    const requestsQuery = query(
+                        collection(db, 'friendRequests'),
+                        where('toUserId', '==', this.currentUser.uid),
+                        where('status', '==', 'pending')
+                    );
+                    
+                    onSnapshot(requestsQuery, (snapshot) => {
+                        this.friendRequests = [];
+                        snapshot.forEach(doc => {
+                            this.friendRequests.push({ id: doc.id, ...doc.data() });
+                        });
+                        this.updateFriendsUI();
+                    }, (error) => {
+                        console.error('Error in friend requests listener:', error);
                     });
-                    this.updateFriendsUI();
-                });
-                
-                // Listen for friends list changes
-                this.loadFriends();
+                    
+                    // Listen for friends list changes
+                    await this.loadFriends();
+                    
+                    console.log('Friends listener setup complete');
+                } catch (error) {
+                    console.error('Error setting up friends listener:', error);
+                }
             }
             
             async loadFriends() {
@@ -1651,7 +1801,9 @@
             showFriendsTab(tabName) {
                 // Update tab buttons
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
+                if (event && event.target) {
+                    event.target.classList.add('active');
+                }
                 
                 // Show/hide tab content
                 document.getElementById('friendsListTab').classList.toggle('hidden', tabName !== 'list');
@@ -1686,8 +1838,8 @@
                             </div>
                         </div>
                         <div class="friend-actions">
-                            ${isOnline ? `<button class="btn-small btn-primary-small" onclick="game.inviteFriend('${friendId}')">Convidar</button>` : ''}
-                            <button class="btn-small btn-secondary-small" onclick="game.removeFriend('${friendId}')">Remover</button>
+                            ${isOnline ? `<button class="btn-small btn-primary-small" onclick="window.game && window.game.inviteFriend('${friendId}')">Convidar</button>` : ''}
+                            <button class="btn-small btn-secondary-small" onclick="window.game && window.game.removeFriend('${friendId}')">Remover</button>
                         </div>
                     `;
                     friendsList.appendChild(friendItem);
@@ -1716,8 +1868,8 @@
                         </div>
                         <p style="margin: 8px 0; font-size: 14px;">Quer ser seu amigo</p>
                         <div class="request-actions">
-                            <button class="btn-small btn-primary-small" onclick="game.acceptFriendRequest('${request.id}', '${request.fromUserId}')">Aceitar</button>
-                            <button class="btn-small btn-secondary-small" onclick="game.rejectFriendRequest('${request.id}')">Recusar</button>
+                            <button class="btn-small btn-primary-small" onclick="window.game && window.game.acceptFriendRequest('${request.id}', '${request.fromUserId}')">Aceitar</button>
+                            <button class="btn-small btn-secondary-small" onclick="window.game && window.game.rejectFriendRequest('${request.id}')">Recusar</button>
                         </div>
                     `;
                     requestsList.appendChild(requestItem);
@@ -1774,10 +1926,17 @@
             }
             
             init() {
-                this.loadSettings();
-                this.setupEventListeners();
-                this.setupMobileControls();
-                this.gameLoop();
+                try {
+                    console.log('Initializing game components...');
+                    this.loadSettings();
+                    this.setupEventListeners();
+                    this.setupMobileControls();
+                    this.gameLoop();
+                    console.log('Game initialized successfully');
+                } catch (error) {
+                    console.error('Game initialization error:', error);
+                    throw error;
+                }
             }
             
             loadSettings() {
@@ -1842,20 +2001,25 @@
                 });
                 
                 // Mobile controls
-                document.getElementById('shootBtn').addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    if (this.gameState === 'playing') {
-                        this.shoot();
-                    }
-                });
+                const shootBtn = document.getElementById('shootBtn');
+                if (shootBtn) {
+                    shootBtn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (this.gameState === 'playing') {
+                            this.shoot();
+                        }
+                    });
+                }
 
                 // Chat input
                 const chatInput = document.getElementById('chatInput');
-                chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.sendChatMessage();
-                    }
-                });
+                if (chatInput) {
+                    chatInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.sendChatMessage();
+                        }
+                    });
+                }
             }
             
             setupMobileControls() {
@@ -4418,23 +4582,64 @@
             }
         }
         
-        // Initialize game when DOM is loaded
-        let game;
-        document.addEventListener('DOMContentLoaded', () => {
-            game = new BattleArena2D();
-            
-            // Prevent context menu on canvas
-            document.getElementById('gameCanvas').addEventListener('contextmenu', e => e.preventDefault());
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                if (game.gameState === 'playing') {
-                    const maxWidth = Math.min(game.currentMap.width, window.innerWidth - 40);
-                    const maxHeight = Math.min(game.currentMap.height, window.innerHeight - 40);
-                    game.canvas.width = maxWidth;
-                    game.canvas.height = maxHeight;
+        // Safe DOM initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('DOM loaded, initializing game...');
+                
+                // Ensure Firebase is ready
+                if (!window.firebase || !window.firebase.auth) {
+                    throw new Error('Firebase not properly loaded');
                 }
-            });
+                
+                // Initialize game
+                game = new BattleArena2D();
+                console.log('Game instance created');
+                
+                // Initialize Firebase connection
+                await game.initFirebase();
+                console.log('Firebase initialized');
+                
+                // Setup canvas events
+                const canvas = document.getElementById('gameCanvas');
+                if (canvas) {
+                    canvas.addEventListener('contextmenu', e => e.preventDefault());
+                } else {
+                    console.error('Canvas element not found!');
+                }
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    if (game && game.gameState === 'playing') {
+                        const maxWidth = Math.min(game.currentMap.width, window.innerWidth - 40);
+                        const maxHeight = Math.min(game.currentMap.height, window.innerHeight - 40);
+                        game.canvas.width = maxWidth;
+                        game.canvas.height = maxHeight;
+                    }
+                });
+                
+                // Make game available globally for button onclick handlers
+                window.game = game;
+                
+            } catch (error) {
+                console.error('Critical initialization error:', error);
+                
+                // Show error in login screen
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="menu">
+                            <h1>⚔️ Battle Arena 2D</h1>
+                            <div class="status status-error">
+                                <strong>Erro Crítico:</strong><br>
+                                ${error.message}<br><br>
+                                Verifique sua conexão e tente recarregar a página.
+                            </div>
+                            <button class="btn" onclick="window.location.reload()">🔄 Recarregar Página</button>
+                        </div>
+                    `;
+                }
+            }
         });
     </script>
 </body>
