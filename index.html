@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle Arena 2D - Multiplayer P2P</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
     
     <style>
         :root {
@@ -275,6 +276,139 @@
         .btn-icon:hover {
             background: var(--color-secondary-hover);
         }
+
+        /* Lobby Styles */
+        .lobby-section {
+            margin: var(--space-24) 0;
+            padding: var(--space-16);
+            background: rgba(var(--color-brown-600-rgb), 0.05);
+            border-radius: var(--radius-base);
+            border: 1px solid var(--color-border);
+        }
+
+        .lobby-section h3 {
+            margin-bottom: var(--space-16);
+            color: var(--color-primary);
+            font-size: var(--font-size-lg);
+        }
+
+        .players-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .lobby-player {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-12);
+            margin: var(--space-8) 0;
+            background: var(--color-surface);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border);
+        }
+
+        .lobby-player.host {
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: var(--space-12);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .character-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-12);
+            background: var(--color-surface);
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-base);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .character-card:hover {
+            border-color: var(--color-primary);
+            background: var(--color-secondary);
+        }
+
+        .character-card.selected {
+            border-color: var(--color-primary);
+            background: rgba(var(--color-teal-500-rgb), 0.2);
+        }
+
+        .character-emoji {
+            font-size: 32px;
+            margin-bottom: var(--space-8);
+        }
+
+        .character-name {
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-medium);
+        }
+
+        .chat-messages {
+            height: 150px;
+            overflow-y: auto;
+            padding: var(--space-12);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            margin-bottom: var(--space-12);
+        }
+
+        .chat-message {
+            margin: var(--space-8) 0;
+            line-height: 1.4;
+        }
+
+        .chat-message strong {
+            color: var(--color-primary);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: var(--space-8);
+        }
+
+        .chat-input-container .input {
+            flex: 1;
+            margin: 0;
+        }
+
+        .chat-input-container .btn {
+            margin: 0;
+            padding: var(--space-8) var(--space-16);
+        }
+
+        .lobby-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-12);
+            margin-top: var(--space-24);
+        }
+
+        .player-status {
+            font-size: var(--font-size-sm);
+            padding: var(--space-4) var(--space-8);
+            border-radius: var(--radius-sm);
+        }
+
+        .player-status.ready {
+            background: rgba(var(--color-teal-500-rgb), 0.2);
+            color: var(--color-success);
+        }
+
+        .player-status.waiting {
+            background: rgba(var(--color-orange-500-rgb), 0.2);
+            color: var(--color-warning);
+        }
     </style>
 </head>
 <body>
@@ -303,6 +437,43 @@
             <button class="btn" onclick="game && game.showHostMenu()">🎯 Host Game</button>
             <button class="btn" onclick="game && game.showJoinMenu()">🔗 Join Game</button>
             <button class="btn btn-secondary" onclick="game && game.showInstructions()">❓ How to Play</button>
+        </div>
+    </div>
+
+    <!-- Lobby Screen -->
+    <div id="lobbyScreen" class="container hidden">
+        <div class="menu" style="max-width: 600px;">
+            <h2>Lobby</h2>
+            <div class="room-code" id="lobbyRoomCode"></div>
+            
+            <!-- Players List -->
+            <div class="lobby-section">
+                <h3>Jogadores</h3>
+                <div id="playersList" class="players-list"></div>
+            </div>
+            
+            <!-- Character Selection -->
+            <div class="lobby-section">
+                <h3>Escolha seu Personagem</h3>
+                <div id="characterGrid" class="character-grid"></div>
+            </div>
+            
+            <!-- Chat -->
+            <div class="lobby-section">
+                <h3>Chat</h3>
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="input" placeholder="Digite sua mensagem..." maxlength="100">
+                    <button class="btn" onclick="game && game.sendChat()">Enviar</button>
+                </div>
+            </div>
+            
+            <!-- Ready Button -->
+            <div class="lobby-actions">
+                <button id="readyButton" class="btn" onclick="game && game.toggleReady()" disabled>Escolha um personagem</button>
+                <button id="startGameButton" class="btn btn-secondary hidden" onclick="game && game.startGameAsHost()">Iniciar Jogo</button>
+                <button class="btn btn-secondary" onclick="game && game.leaveRoom()">← Sair da Sala</button>
+            </div>
         </div>
     </div>
 
@@ -380,7 +551,7 @@
         // 1. IMPORTS DO FIREBASE (apenas uma vez!)
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, addDoc, onSnapshot, query, where, serverTimestamp, arrayUnion, arrayRemove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, addDoc, onSnapshot, query, where, orderBy, serverTimestamp, arrayUnion, arrayRemove, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         
         // 2. DECLARAR VARIÁVEIS GLOBAIS APENAS UMA VEZ
         let firebaseApp;
@@ -393,6 +564,10 @@
         let selectedCharacter = null;
         let isHost = false;
         let roomCode = '';
+        let lobbyUnsubscribe = null;
+        let chatUnsubscribe = null;
+        let isReady = false;
+        let roomData = null;
         
         // 3. CONFIG DO FIREBASE
         const firebaseConfig = {
@@ -487,7 +662,8 @@
             showHostMenu() {
                 this.hideAllMenus();
                 document.getElementById('hostMenu').classList.remove('hidden');
-                this.createHost();
+                // Aguardar um momento antes de criar host para UI atualizar
+                setTimeout(() => this.createHost(), 100);
             }
             
             showJoinMenu() {
@@ -501,14 +677,14 @@
             }
             
             hideAllMenus() {
-                const menus = ['loginScreen', 'mainMenu', 'hostMenu', 'joinMenu', 'instructionsMenu', 'gameOverMenu'];
+                const menus = ['loginScreen', 'mainMenu', 'hostMenu', 'joinMenu', 'instructionsMenu', 'gameOverMenu', 'lobbyScreen'];
                 menus.forEach(id => {
                     document.getElementById(id).classList.add('hidden');
                 });
                 document.getElementById('gameContainer').style.display = 'none';
             }
             
-            // Firebase Authentication
+            // Firebase Authentication COM CORREÇÃO DO POPUP
             async signInWithGoogle() {
                 try {
                     const statusElement = document.getElementById('loginStatus');
@@ -517,20 +693,42 @@
                     statusElement.className = 'status status-info';
                     
                     const provider = new GoogleAuthProvider();
+                    provider.setCustomParameters({
+                        prompt: 'select_account'
+                    });
+                    
+                    // Usar signInWithPopup com tratamento de erro específico
                     const result = await signInWithPopup(auth, provider);
-                    
                     currentUser = result.user;
-                    console.log('Login realizado:', result.user.email);
                     
-                    await this.createUserProfile();
+                    // Salvar usuário no Firestore
+                    await setDoc(doc(db, 'users', result.user.uid), {
+                        uid: result.user.uid,
+                        email: result.user.email,
+                        displayName: result.user.displayName,
+                        photoURL: result.user.photoURL,
+                        lastSeen: serverTimestamp(),
+                        online: true
+                    }, { merge: true });
+                    
+                    console.log('Login bem-sucedido:', result.user.email);
                     
                     statusElement.textContent = 'Login realizado com sucesso!';
                     statusElement.className = 'status status-success';
                     
                 } catch (error) {
-                    console.error('Erro no login:', error);
+                    console.error('Erro no login:', error.code, error.message);
                     const statusElement = document.getElementById('loginStatus');
-                    statusElement.textContent = 'Erro no login: ' + error.message;
+                    
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        statusElement.textContent = 'Você fechou o popup de login. Tente novamente.';
+                    } else if (error.code === 'auth/popup-blocked') {
+                        statusElement.textContent = 'Popup bloqueado pelo navegador. Permita popups para este site.';
+                    } else if (error.code === 'auth/unauthorized-domain') {
+                        statusElement.textContent = 'Domínio não autorizado. Configure o domínio no Firebase Console.';
+                    } else {
+                        statusElement.textContent = 'Erro ao fazer login: ' + error.message;
+                    }
                     statusElement.className = 'status status-error';
                 }
             }
@@ -589,59 +787,150 @@
                 }
             }
             
-            // P2P Networking
-            createHost() {
-                roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-                isHost = true;
-                
-                document.getElementById('hostStatus').textContent = 'Criando sala...';
-                
-                peer = new Peer(roomCode);
-                
-                peer.on('open', (id) => {
-                    document.getElementById('hostStatus').textContent = 'Sala criada!';
-                    document.getElementById('roomCodeDisplay').textContent = roomCode;
-                    document.getElementById('roomCodeContainer').classList.remove('hidden');
-                    document.getElementById('waitingMessage').classList.remove('hidden');
-                });
-                
-                peer.on('connection', (conn) => {
-                    connection = conn;
-                    this.setupConnection(conn);
-                    setTimeout(() => this.startGame(), 2000);
-                });
-                
-                peer.on('error', (err) => {
-                    document.getElementById('hostStatus').textContent = 'Erro: ' + err.message;
+            // FIRESTORE + P2P NETWORKING COM CORREÇÕES
+            async createHost() {
+                try {
+                    isHost = true;
+                    roomCode = this.generateRoomCode();
+                    
+                    document.getElementById('hostStatus').textContent = 'Criando sala...';
+                    
+                    // Criar sala no Firestore
+                    await setDoc(doc(db, 'rooms', roomCode), {
+                        hostId: currentUser.uid,
+                        hostName: currentUser.displayName,
+                        players: [{
+                            uid: currentUser.uid,
+                            name: currentUser.displayName,
+                            character: null,
+                            ready: false,
+                            isHost: true
+                        }],
+                        gameMode: 'deathmatch',
+                        maxPlayers: 8,
+                        status: 'lobby',
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    // Iniciar peer
+                    peer = new Peer(roomCode);
+                    
+                    peer.on('open', (id) => {
+                        console.log('Sala criada:', id);
+                        document.getElementById('hostStatus').textContent = 'Sala criada!';
+                        document.getElementById('roomCodeDisplay').textContent = roomCode;
+                        document.getElementById('roomCodeContainer').classList.remove('hidden');
+                        document.getElementById('waitingMessage').classList.remove('hidden');
+                        
+                        // Ir para o lobby após breve delay
+                        setTimeout(() => {
+                            this.hideAllMenus();
+                            this.showLobby();
+                        }, 1500);
+                    });
+                    
+                    peer.on('connection', (conn) => {
+                        connection = conn;
+                        this.setupConnection(conn);
+                    });
+                    
+                    peer.on('error', (err) => {
+                        console.error('Erro P2P:', err);
+                        document.getElementById('hostStatus').textContent = 'Erro: ' + err.message;
+                        document.getElementById('hostStatus').className = 'status status-error';
+                    });
+                    
+                } catch (error) {
+                    console.error('Erro ao criar sala:', error);
+                    document.getElementById('hostStatus').textContent = 'Erro ao criar sala: ' + error.message;
                     document.getElementById('hostStatus').className = 'status status-error';
-                });
+                }
             }
             
-            joinRoom() {
+            generateRoomCode() {
+                return Math.random().toString(36).substring(2, 8).toUpperCase();
+            }
+            
+            async joinRoom() {
                 const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
                 if (!code) return;
                 
-                roomCode = code;
-                isHost = false;
-                
-                document.getElementById('joinStatus').classList.remove('hidden');
-                document.getElementById('joinStatus').textContent = 'Conectando...';
-                
-                peer = new Peer();
-                
-                peer.on('open', () => {
-                    connection = peer.connect(code);
-                    this.setupConnection(connection);
-                });
-                
-                peer.on('error', (err) => {
-                    document.getElementById('joinStatus').textContent = 'Erro: ' + err.message;
+                try {
+                    isHost = false;
+                    roomCode = code;
+                    
+                    document.getElementById('joinStatus').classList.remove('hidden');
+                    document.getElementById('joinStatus').textContent = 'Verificando sala...';
+                    
+                    // Verificar se sala existe
+                    const roomRef = doc(db, 'rooms', code);
+                    const roomSnap = await getDoc(roomRef);
+                    
+                    if (!roomSnap.exists()) {
+                        document.getElementById('joinStatus').textContent = 'Sala não encontrada!';
+                        document.getElementById('joinStatus').className = 'status status-error';
+                        return;
+                    }
+                    
+                    const currentRoomData = roomSnap.data();
+                    
+                    if (currentRoomData.players.length >= currentRoomData.maxPlayers) {
+                        document.getElementById('joinStatus').textContent = 'Sala cheia!';
+                        document.getElementById('joinStatus').className = 'status status-error';
+                        return;
+                    }
+                    
+                    if (currentRoomData.status !== 'lobby') {
+                        document.getElementById('joinStatus').textContent = 'Jogo já iniciado!';
+                        document.getElementById('joinStatus').className = 'status status-error';
+                        return;
+                    }
+                    
+                    document.getElementById('joinStatus').textContent = 'Conectando...';
+                    
+                    // Adicionar jogador à sala no Firestore
+                    await updateDoc(roomRef, {
+                        players: arrayUnion({
+                            uid: currentUser.uid,
+                            name: currentUser.displayName,
+                            character: null,
+                            ready: false,
+                            isHost: false
+                        })
+                    });
+                    
+                    // Conectar via P2P
+                    peer = new Peer();
+                    
+                    peer.on('open', () => {
+                        connection = peer.connect(code);
+                        this.setupConnection(connection);
+                        
+                        document.getElementById('joinStatus').textContent = 'Conectado!';
+                        document.getElementById('joinStatus').className = 'status status-success';
+                        
+                        setTimeout(() => {
+                            this.hideAllMenus();
+                            this.showLobby();
+                        }, 1000);
+                    });
+                    
+                    peer.on('error', (err) => {
+                        console.error('Erro P2P:', err);
+                        document.getElementById('joinStatus').textContent = 'Erro de conexão: ' + err.message;
+                        document.getElementById('joinStatus').className = 'status status-error';
+                    });
+                    
+                } catch (error) {
+                    console.error('Erro ao entrar na sala:', error);
+                    document.getElementById('joinStatus').textContent = 'Erro ao entrar na sala: ' + error.message;
                     document.getElementById('joinStatus').className = 'status status-error';
-                });
+                }
             }
             
             setupConnection(conn) {
                 conn.on('open', () => {
+                    console.log('Conexão P2P estabelecida');
                     if (isHost) {
                         document.getElementById('hostStatus').textContent = 'Jogador conectado!';
                     } else {
@@ -656,12 +945,174 @@
                 
                 conn.on('close', () => {
                     alert('Conexão perdida!');
-                    this.showMainMenu();
+                    this.leaveRoom();
                 });
+                
+                conn.on('error', (err) => {
+                    console.error('Erro P2P:', err);
+                });
+            }
+            
+            // MOSTRAR LOBBY
+            showLobby() {
+                this.hideAllMenus();
+                document.getElementById('lobbyScreen').classList.remove('hidden');
+                document.getElementById('lobbyRoomCode').textContent = `Código: ${roomCode}`;
+                
+                this.initializeCharacters();
+                this.listenToLobbyChanges();
+                this.setupLobbyChat();
+                
+                // Setup chat input
+                const chatInput = document.getElementById('chatInput');
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendChat();
+                    }
+                });
+            }
+            
+            // ESCUTAR MUDANÇAS NO LOBBY EM TEMPO REAL
+            listenToLobbyChanges() {
+                const roomRef = doc(db, 'rooms', roomCode);
+                
+                lobbyUnsubscribe = onSnapshot(roomRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        roomData = docSnap.data();
+                        this.updateLobbyUI(roomData);
+                    }
+                });
+            }
+            
+            // ATUALIZAR UI DO LOBBY
+            updateLobbyUI(roomData) {
+                const playersList = document.getElementById('playersList');
+                playersList.innerHTML = '';
+                
+                roomData.players.forEach(player => {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = `lobby-player ${player.isHost ? 'host' : ''}`;
+                    
+                    const characterName = player.character ? this.getCharacterName(player.character) : 'Escolhendo...';
+                    const statusText = player.ready ? '✓ Pronto' : '⏳ Aguardando';
+                    const statusClass = player.ready ? 'ready' : 'waiting';
+                    
+                    playerDiv.innerHTML = `
+                        <div>
+                            <strong>${player.name}</strong>
+                            ${player.isHost ? '<span style="color: var(--color-primary);"> (Host)</span>' : ''}
+                        </div>
+                        <div>${characterName}</div>
+                        <div class="player-status ${statusClass}">${statusText}</div>
+                    `;
+                    playersList.appendChild(playerDiv);
+                });
+                
+                // Atualizar botão de iniciar jogo (apenas host)
+                if (isHost) {
+                    const startButton = document.getElementById('startGameButton');
+                    const allReady = roomData.players.length > 1 && 
+                                   roomData.players.every(p => p.ready && p.character);
+                    
+                    if (allReady) {
+                        startButton.classList.remove('hidden');
+                    } else {
+                        startButton.classList.add('hidden');
+                    }
+                }
+            }
+            
+            // INICIALIZAR PERSONAGENS
+            initializeCharacters() {
+                const characters = [
+                    { id: 'warrior', name: 'Guerreiro', emoji: '⚔️' },
+                    { id: 'mage', name: 'Mago', emoji: '🧙' },
+                    { id: 'archer', name: 'Arqueiro', emoji: '🏹' },
+                    { id: 'knight', name: 'Cavaleiro', emoji: '🛡️' },
+                    { id: 'assassin', name: 'Assassino', emoji: '🗡️' },
+                    { id: 'tank', name: 'Tanque', emoji: '🛡️' },
+                    { id: 'healer', name: 'Curandeiro', emoji: '✨' },
+                    { id: 'berserker', name: 'Berserker', emoji: '👹' },
+                    { id: 'ninja', name: 'Ninja', emoji: '🥷' },
+                    { id: 'paladin', name: 'Paladino', emoji: '⛩️' }
+                ];
+                
+                const characterGrid = document.getElementById('characterGrid');
+                characterGrid.innerHTML = '';
+                
+                characters.forEach(character => {
+                    const characterCard = document.createElement('div');
+                    characterCard.className = 'character-card';
+                    characterCard.onclick = () => this.selectCharacter(character.id);
+                    
+                    characterCard.innerHTML = `
+                        <div class="character-emoji">${character.emoji}</div>
+                        <div class="character-name">${character.name}</div>
+                    `;
+                    
+                    characterGrid.appendChild(characterCard);
+                });
+            }
+            
+            getCharacterName(id) {
+                const names = {
+                    warrior: 'Guerreiro',
+                    mage: 'Mago', 
+                    archer: 'Arqueiro',
+                    knight: 'Cavaleiro',
+                    assassin: 'Assassino',
+                    tank: 'Tanque',
+                    healer: 'Curandeiro',
+                    berserker: 'Berserker',
+                    ninja: 'Ninja',
+                    paladin: 'Paladino'
+                };
+                return names[id] || 'Desconhecido';
+            }
+            
+            // SELECIONAR PERSONAGEM
+            async selectCharacter(characterId) {
+                selectedCharacter = characterId;
+                
+                // Atualizar UI
+                document.querySelectorAll('.character-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                event.target.closest('.character-card').classList.add('selected');
+                
+                // Habilitar botão ready
+                const readyButton = document.getElementById('readyButton');
+                readyButton.textContent = isReady ? 'Não Pronto' : 'Pronto';
+                readyButton.disabled = false;
+                
+                // Atualizar no Firestore
+                try {
+                    const roomRef = doc(db, 'rooms', roomCode);
+                    const roomSnap = await getDoc(roomRef);
+                    const currentRoomData = roomSnap.data();
+                    
+                    const updatedPlayers = currentRoomData.players.map(p => {
+                        if (p.uid === currentUser.uid) {
+                            return { ...p, character: characterId };
+                        }
+                        return p;
+                    });
+                    
+                    await updateDoc(roomRef, { players: updatedPlayers });
+                    
+                } catch (error) {
+                    console.error('Erro ao selecionar personagem:', error);
+                }
             }
             
             handleNetworkData(data) {
                 switch (data.type) {
+                    case 'START_GAME':
+                        this.initializeGame(data.players);
+                        break;
+                    case 'GAME_STATE':
+                        this.updateGameState(data);
+                        break;
                     case 'player_update':
                         if (!this.remotePlayers.has(data.playerId)) {
                             this.remotePlayers.set(data.playerId, {});
@@ -673,6 +1124,178 @@
                     case 'bullet':
                         this.bullets.push(data.bullet);
                         break;
+                }
+            }
+            
+            // TOGGLE READY
+            async toggleReady() {
+                if (!selectedCharacter) return;
+                
+                isReady = !isReady;
+                
+                // Atualizar UI
+                const readyButton = document.getElementById('readyButton');
+                readyButton.textContent = isReady ? 'Não Pronto' : 'Pronto';
+                
+                // Atualizar no Firestore
+                try {
+                    const roomRef = doc(db, 'rooms', roomCode);
+                    const roomSnap = await getDoc(roomRef);
+                    const currentRoomData = roomSnap.data();
+                    
+                    const updatedPlayers = currentRoomData.players.map(p => {
+                        if (p.uid === currentUser.uid) {
+                            return { ...p, ready: isReady };
+                        }
+                        return p;
+                    });
+                    
+                    await updateDoc(roomRef, { players: updatedPlayers });
+                    
+                } catch (error) {
+                    console.error('Erro ao marcar como pronto:', error);
+                }
+            }
+            
+            // SETUP CHAT DO LOBBY
+            setupLobbyChat() {
+                const chatRef = collection(db, 'rooms', roomCode, 'chat');
+                const q = query(chatRef, orderBy('timestamp', 'asc'));
+                
+                chatUnsubscribe = onSnapshot(q, (snapshot) => {
+                    const chatBox = document.getElementById('chatMessages');
+                    chatBox.innerHTML = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const msg = doc.data();
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'chat-message';
+                        msgDiv.innerHTML = `<strong>${msg.userName}:</strong> ${msg.message}`;
+                        chatBox.appendChild(msgDiv);
+                    });
+                    
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                });
+            }
+            
+            // ENVIAR MENSAGEM NO CHAT
+            async sendChat() {
+                const chatInput = document.getElementById('chatInput');
+                const message = chatInput.value.trim();
+                
+                if (!message) return;
+                
+                try {
+                    await addDoc(collection(db, 'rooms', roomCode, 'chat'), {
+                        userId: currentUser.uid,
+                        userName: currentUser.displayName,
+                        message: message,
+                        timestamp: serverTimestamp()
+                    });
+                    
+                    chatInput.value = '';
+                } catch (error) {
+                    console.error('Erro ao enviar mensagem:', error);
+                }
+            }
+            
+            // INICIAR JOGO COMO HOST
+            async startGameAsHost() {
+                if (!isHost) return;
+                
+                try {
+                    // Atualizar status da sala
+                    await updateDoc(doc(db, 'rooms', roomCode), {
+                        status: 'playing'
+                    });
+                    
+                    // Enviar comando de início via P2P
+                    if (connection && connection.open) {
+                        connection.send({
+                            type: 'START_GAME',
+                            players: roomData.players
+                        });
+                    }
+                    
+                    // Iniciar jogo localmente
+                    this.initializeGame(roomData.players);
+                    
+                } catch (error) {
+                    console.error('Erro ao iniciar jogo:', error);
+                }
+            }
+            
+            // INICIALIZAR JOGO
+            initializeGame(players) {
+                this.gameState = 'playing';
+                this.hideAllMenus();
+                document.getElementById('gameContainer').style.display = 'block';
+                
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                
+                // Reset player
+                this.localPlayer.x = 400;
+                this.localPlayer.y = 300;
+                this.localPlayer.health = 100;
+                this.localPlayer.score = 0;
+                this.localPlayer.isAlive = true;
+                
+                console.log('Jogo iniciado com jogadores:', players);
+            }
+            
+            // SAIR DA SALA
+            async leaveRoom() {
+                try {
+                    // Remover do Firestore
+                    const roomRef = doc(db, 'rooms', roomCode);
+                    const roomSnap = await getDoc(roomRef);
+                    
+                    if (roomSnap.exists()) {
+                        const currentRoomData = roomSnap.data();
+                        const updatedPlayers = currentRoomData.players.filter(p => p.uid !== currentUser.uid);
+                        
+                        if (updatedPlayers.length === 0) {
+                            // Última pessoa, deletar sala
+                            await deleteDoc(roomRef);
+                        } else {
+                            await updateDoc(roomRef, { players: updatedPlayers });
+                        }
+                    }
+                    
+                    // Desconectar listeners
+                    if (lobbyUnsubscribe) {
+                        lobbyUnsubscribe();
+                        lobbyUnsubscribe = null;
+                    }
+                    if (chatUnsubscribe) {
+                        chatUnsubscribe();
+                        chatUnsubscribe = null;
+                    }
+                    
+                    // Fechar conexões P2P
+                    if (connection) {
+                        connection.close();
+                        connection = null;
+                    }
+                    if (peer) {
+                        peer.destroy();
+                        peer = null;
+                    }
+                    
+                    // Reset variáveis
+                    isHost = false;
+                    isReady = false;
+                    selectedCharacter = null;
+                    roomCode = '';
+                    roomData = null;
+                    
+                    this.showMainMenu();
+                    
+                } catch (error) {
+                    console.error('Erro ao sair da sala:', error);
+                    // Forçar volta ao menu mesmo com erro
+                    this.showMainMenu();
                 }
             }
             
@@ -911,6 +1534,13 @@
                 window.game = game;
                 
                 console.log('Jogo inicializado com sucesso!');
+                
+                // Limpeza ao fechar a página
+                window.addEventListener('beforeunload', () => {
+                    if (game) {
+                        game.leaveRoom();
+                    }
+                });
                 
             } catch (error) {
                 console.error('Erro crítico de inicialização:', error);
