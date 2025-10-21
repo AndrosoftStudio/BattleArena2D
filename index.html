@@ -4,6 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Battle Arena 2D - Multiplayer P2P</title>
+    
+    <!-- Firebase v9 modular SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+        
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyB6ho-GUxFGjjQprHHuxCDswIpWy9jtpcU",
+          authDomain: "battlearena2dperplexity.firebaseapp.com",
+          projectId: "battlearena2dperplexity",
+          storageBucket: "battlearena2dperplexity.firebasestorage.app",
+          messagingSenderId: "180775815859",
+          appId: "1:180775815859:web:23b54f48f1e093ef0f3ec6",
+          measurementId: "G-89P0EVPL9X"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Make Firebase available globally
+        window.firebase = { auth, db, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, collection, addDoc, query, where, onSnapshot, doc, setDoc, getDoc, updateDoc, serverTimestamp };
+    </script>
     <style>
         :root {
             /* Primitive Color Tokens */
@@ -575,6 +601,178 @@
             border-radius: 2px;
         }
 
+        /* User Info Styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-12);
+            padding: var(--space-16);
+            background: rgba(var(--color-brown-600-rgb), 0.1);
+            border-radius: var(--radius-base);
+            margin-bottom: var(--space-24);
+            border: 1px solid var(--color-border);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--color-primary);
+        }
+
+        .user-email {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .btn-icon {
+            background: var(--color-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: var(--space-8);
+            cursor: pointer;
+            color: var(--color-text);
+            font-size: var(--font-size-lg);
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--color-secondary-hover);
+        }
+
+        /* Friends Panel */
+        .friends-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--color-surface);
+            border-left: 1px solid var(--color-border);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .friends-panel.show {
+            right: 0;
+        }
+
+        .friends-content {
+            padding: var(--space-24);
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .friends-tabs {
+            display: flex;
+            margin-bottom: var(--space-16);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: var(--space-12);
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            margin-top: var(--space-16);
+        }
+
+        .friends-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-8);
+        }
+
+        .friend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-12);
+            padding: var(--space-12);
+            background: rgba(var(--color-brown-600-rgb), 0.05);
+            border-radius: var(--radius-base);
+            border: 1px solid var(--color-border);
+        }
+
+        .friend-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--color-border);
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: var(--font-weight-medium);
+        }
+
+        .friend-status {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .friend-status.online {
+            color: var(--color-success);
+        }
+
+        .friend-actions {
+            display: flex;
+            gap: var(--space-4);
+        }
+
+        .btn-small {
+            padding: var(--space-4) var(--space-8);
+            font-size: var(--font-size-sm);
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary-small {
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+        }
+
+        .btn-secondary-small {
+            background: var(--color-secondary);
+            color: var(--color-text);
+        }
+
+        .friend-requests {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-8);
+        }
+
+        .friend-request {
+            padding: var(--space-16);
+            background: var(--color-secondary);
+            border-radius: var(--radius-base);
+            border: 1px solid var(--color-border);
+        }
+
+        .request-actions {
+            display: flex;
+            gap: var(--space-8);
+            margin-top: var(--space-12);
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .lobby-content {
@@ -588,14 +786,42 @@
             .menu {
                 max-width: 90vw !important;
             }
+            
+            .friends-panel {
+                width: 100vw;
+                right: -100vw;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="mainMenu" class="container">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="container">
         <div class="menu">
             <h1>⚔️ Battle Arena 2D</h1>
-            <p>Multiplayer P2P Shooter</p>
+            <p>Faça login para jogar e conectar com amigos</p>
+            <button class="btn" onclick="game.signInWithGoogle()">🔐 Login com Google</button>
+            <div id="loginStatus" class="status status-info hidden">Conectando...</div>
+        </div>
+    </div>
+
+    <div id="mainMenu" class="container hidden">
+        <div class="menu">
+            <h1>⚔️ Battle Arena 2D</h1>
+            <div id="userInfo" class="user-info">
+                <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                <div>
+                    <div id="userName">Nome do Usuário</div>
+                    <div id="userEmail" class="user-email">email@example.com</div>
+                </div>
+                <button class="btn-icon" onclick="game.showFriendsPanel()" title="Amigos">👥</button>
+                <button class="btn-icon" onclick="game.signOut()" title="Logout">🚪</button>
+            </div>
             <button class="btn" onclick="game.showHostMenu()">🎯 Host Game</button>
             <button class="btn" onclick="game.showJoinMenu()">🔗 Join Game</button>
             <button class="btn btn-secondary" onclick="game.showSettings()">⚙️ Settings</button>
@@ -751,6 +977,34 @@
         </div>
     </div>
 
+    <!-- Friends Panel -->
+    <div id="friendsPanel" class="friends-panel hidden">
+        <div class="friends-content">
+            <h3>Amigos</h3>
+            <div class="friends-tabs">
+                <button class="tab-btn active" onclick="game.showFriendsTab('list')">Lista</button>
+                <button class="tab-btn" onclick="game.showFriendsTab('requests')">Pedidos</button>
+                <button class="tab-btn" onclick="game.showFriendsTab('add')">Adicionar</button>
+            </div>
+            
+            <div id="friendsListTab" class="tab-content">
+                <div id="friendsList" class="friends-list"></div>
+            </div>
+            
+            <div id="friendsRequestsTab" class="tab-content hidden">
+                <div id="friendRequests" class="friend-requests"></div>
+            </div>
+            
+            <div id="addFriendTab" class="tab-content hidden">
+                <input type="email" id="friendEmail" class="input" placeholder="Email do amigo">
+                <button class="btn" onclick="game.sendFriendRequest()">Enviar Pedido</button>
+                <div id="addFriendStatus" class="status hidden"></div>
+            </div>
+            
+            <button class="btn btn-secondary" onclick="game.closeFriendsPanel()">Fechar</button>
+        </div>
+    </div>
+
     <!-- Fullscreen prompt for mobile -->
     <div id="fullscreenPrompt" class="fullscreen-prompt hidden">
         <button class="btn" onclick="game.requestFullscreen()">📱 Enter Fullscreen</button>
@@ -768,57 +1022,196 @@
 
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        // Game data
+        // Game data - 10 Unique Characters
         const CHARACTERS = {
-            bull: {
-                id: 'bull',
-                name: 'Bull',
-                avatar: '👂',
-                health: 150,
-                speed: 120,
+            archer: {
+                id: 'archer',
+                name: 'Archer',
+                avatar: '🏹',
+                health: 90,
+                speed: 140,
                 attack: {
-                    type: 'shotgun',
+                    type: 'long_range',
+                    damage: 45,
+                    fire_rate: 800,
+                    bullet_count: 1,
+                    range: 500
+                },
+                special: {
+                    type: 'piercing_arrow',
+                    effect: 'flecha que atravessa múltiplos inimigos',
+                    cooldown: 8000
+                }
+            },
+            warrior: {
+                id: 'warrior',
+                name: 'Warrior', 
+                avatar: '⚔️',
+                health: 160,
+                speed: 110,
+                attack: {
+                    type: 'melee',
+                    damage: 65,
+                    fire_rate: 600,
+                    bullet_count: 1,
+                    range: 80
+                },
+                special: {
+                    type: 'spin_attack',
+                    effect: 'ataque giratório que atinge área ao redor',
+                    cooldown: 10000
+                }
+            },
+            mage: {
+                id: 'mage',
+                name: 'Mage',
+                avatar: '🔮',
+                health: 75,
+                speed: 125,
+                attack: {
+                    type: 'fireball',
                     damage: 40,
                     fire_rate: 400,
-                    bullet_count: 5
+                    bullet_count: 3,
+                    range: 300
                 },
                 special: {
-                    type: 'dash',
-                    effect: 'avança em linha reta destruindo obstáculos'
+                    type: 'meteor',
+                    effect: 'meteoro que causa dano em área',
+                    cooldown: 12000
                 }
             },
-            colt: {
-                id: 'colt',
-                name: 'Colt',
-                avatar: '🤠',
-                health: 100,
-                speed: 150,
+            assassin: {
+                id: 'assassin',
+                name: 'Assassin',
+                avatar: '🗡️',
+                health: 80,
+                speed: 180,
                 attack: {
-                    type: 'burst',
-                    damage: 20,
-                    fire_rate: 250,
-                    bullet_count: 6
+                    type: 'dual_blades',
+                    damage: 35,
+                    fire_rate: 200,
+                    bullet_count: 2,
+                    range: 120
                 },
                 special: {
-                    type: 'range_shot',
-                    effect: 'tiro ultra longo e rápido'
+                    type: 'stealth_dash',
+                    effect: 'teleporte invisível com dano crítico',
+                    cooldown: 8000
                 }
             },
-            shelly: {
-                id: 'shelly',
-                name: 'Shelly',
-                avatar: '👩',
-                health: 120,
+            tank: {
+                id: 'tank',
+                name: 'Tank',
+                avatar: '🛡️',
+                health: 200,
+                speed: 100,
+                attack: {
+                    type: 'cannon',
+                    damage: 70,
+                    fire_rate: 1200,
+                    bullet_count: 1,
+                    range: 350
+                },
+                special: {
+                    type: 'shield_slam',
+                    effect: 'escudo que reflete projéteis',
+                    cooldown: 15000
+                }
+            },
+            sniper: {
+                id: 'sniper',
+                name: 'Sniper',
+                avatar: '🎯',
+                health: 70,
+                speed: 120,
+                attack: {
+                    type: 'precision',
+                    damage: 80,
+                    fire_rate: 1000,
+                    bullet_count: 1,
+                    range: 500
+                },
+                special: {
+                    type: 'headshot',
+                    effect: 'tiro com dano massivo e precisão perfeita',
+                    cooldown: 6000
+                }
+            },
+            pyro: {
+                id: 'pyro',
+                name: 'Pyro',
+                avatar: '🔥',
+                health: 110,
                 speed: 130,
                 attack: {
-                    type: 'spread',
+                    type: 'flamethrower',
                     damage: 25,
-                    fire_rate: 300,
-                    bullet_count: 8
+                    fire_rate: 100,
+                    bullet_count: 5,
+                    range: 200
                 },
                 special: {
-                    type: 'shockwave',
-                    effect: 'libera onda de dano ao redor'
+                    type: 'fire_wall',
+                    effect: 'muro de fogo que causa dano contínuo',
+                    cooldown: 10000
+                }
+            },
+            engineer: {
+                id: 'engineer',
+                name: 'Engineer',
+                avatar: '🔧',
+                health: 95,
+                speed: 115,
+                attack: {
+                    type: 'grenade',
+                    damage: 50,
+                    fire_rate: 700,
+                    bullet_count: 1,
+                    range: 280
+                },
+                special: {
+                    type: 'turret',
+                    effect: 'constrói torre que atira automaticamente',
+                    cooldown: 20000
+                }
+            },
+            healer: {
+                id: 'healer',
+                name: 'Healer',
+                avatar: '💚',
+                health: 85,
+                speed: 135,
+                attack: {
+                    type: 'heal_beam',
+                    damage: 20,
+                    fire_rate: 300,
+                    bullet_count: 1,
+                    range: 250
+                },
+                special: {
+                    type: 'mass_heal',
+                    effect: 'cura todos os aliados próximos',
+                    cooldown: 12000
+                }
+            },
+            berserker: {
+                id: 'berserker',
+                name: 'Berserker',
+                avatar: '🪓',
+                health: 140,
+                speed: 160,
+                attack: {
+                    type: 'rage_axe',
+                    damage: 55,
+                    fire_rate: 450,
+                    bullet_count: 1,
+                    range: 100
+                },
+                special: {
+                    type: 'blood_rage',
+                    effect: 'aumenta velocidade e dano drasticamente',
+                    cooldown: 8000
                 }
             }
         };
@@ -845,30 +1238,47 @@
             deathmatch: {
                 id: 'deathmatch',
                 name: 'Todos vs Todos',
-                description: 'Cada jogador por si, vence quem atingir X pontos.',
+                description: 'Cada jogador por si, vence quem atingir 10 eliminações.',
                 min_players: 2,
-                max_players: 8
+                max_players: 8,
+                win_condition: 'kills',
+                win_target: 10,
+                respawn: true
             },
             team_vs_team: {
                 id: 'team_vs_team',
                 name: 'Equipe vs Equipe',
-                description: 'Times organizados automaticamente, vence primeira equipe a atingir X eliminações.',
+                description: 'Times balanceados, primeira equipe a 15 eliminações vence.',
                 min_players: 2,
-                max_players: 8
+                max_players: 8,
+                win_condition: 'team_kills',
+                win_target: 15,
+                respawn: true,
+                auto_balance: true
             },
             bots: {
                 id: 'bots',
                 name: 'Todos vs Bots',
-                description: 'Todos humanos cooperam contra uma equipe de bots com IA.',
+                description: 'Cooperativo contra IA inteligente. Sobreviva 5 minutos.',
                 min_players: 1,
-                max_players: 6
+                max_players: 6,
+                win_condition: 'survive_time',
+                win_target: 300000, // 5 minutes
+                bot_count: 8,
+                bot_difficulty: 'medium',
+                respawn: true
             },
             zombies: {
                 id: 'zombies',
                 name: 'Ordas de Zumbis',
-                description: 'Cooperativo: humanos sobrevivem a levas de zumbis. Fica mais difícil a cada rodada.',
+                description: 'Sobreviva a ondas infinitas. Cada onda fica mais difícil.',
                 min_players: 1,
-                max_players: 6
+                max_players: 6,
+                win_condition: 'waves',
+                wave_duration: 60000, // 1 minute per wave
+                zombies_per_wave: 5,
+                wave_multiplier: 1.5,
+                respawn: false // Permadeath mode
             }
         };
 
@@ -891,6 +1301,12 @@
                 this.currentMap = MAPS.desert;
                 this.players = new Map();
                 this.chatMessages = [];
+                
+                // User data
+                this.currentUser = null;
+                this.friends = new Map();
+                this.friendRequests = [];
+                this.onlineFriends = new Set();
                 
                 // Camera
                 this.camera = { x: 0, y: 0 };
@@ -938,6 +1354,18 @@
                 this.TRAIL_LENGTH = 10;
                 this.PARTICLE_COUNT = 20;
                 
+                // Game mode specific
+                this.gameTimer = 0;
+                this.waveNumber = 1;
+                this.zombiesKilled = 0;
+                this.teamScores = { team1: 0, team2: 0 };
+                this.turrets = [];
+                this.fireWalls = [];
+                
+                // Bot AI system
+                this.botUpdateInterval = 100;
+                this.lastBotUpdate = 0;
+                
                 // Network
                 this.lastNetworkUpdate = 0;
                 this.networkUpdateRate = 1000 / 20; // 20 updates per second
@@ -946,6 +1374,380 @@
                 
                 this.init();
                 this.checkFullscreenMobile();
+                this.initFirebase();
+            }
+            
+            // Firebase Authentication & Friends System
+            async initFirebase() {
+                // Wait for Firebase to load
+                let attempts = 0;
+                while (!window.firebase && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.firebase) {
+                    console.error('Firebase failed to load');
+                    return;
+                }
+                
+                const { auth, onAuthStateChanged } = window.firebase;
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        this.currentUser = user;
+                        this.showMainMenu();
+                        this.loadUserData();
+                        this.setupFriendsListener();
+                    } else {
+                        this.currentUser = null;
+                        this.showLoginScreen();
+                    }
+                });
+            }
+            
+            showLoginScreen() {
+                this.hideAllMenus();
+                document.getElementById('loginScreen').classList.remove('hidden');
+            }
+            
+            async signInWithGoogle() {
+                try {
+                    document.getElementById('loginStatus').classList.remove('hidden');
+                    document.getElementById('loginStatus').textContent = 'Conectando...';
+                    
+                    const { auth, GoogleAuthProvider, signInWithPopup } = window.firebase;
+                    const provider = new GoogleAuthProvider();
+                    const result = await signInWithPopup(auth, provider);
+                    
+                    this.currentUser = result.user;
+                    await this.createUserProfile();
+                    
+                } catch (error) {
+                    console.error('Login failed:', error);
+                    document.getElementById('loginStatus').textContent = 'Erro no login: ' + error.message;
+                    document.getElementById('loginStatus').className = 'status status-error';
+                }
+            }
+            
+            async signOut() {
+                const { auth, signOut } = window.firebase;
+                await signOut(auth);
+            }
+            
+            async createUserProfile() {
+                if (!this.currentUser) return;
+                
+                const { db, doc, setDoc, getDoc, serverTimestamp } = window.firebase;
+                const userRef = doc(db, 'users', this.currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        uid: this.currentUser.uid,
+                        name: this.currentUser.displayName,
+                        email: this.currentUser.email,
+                        photoURL: this.currentUser.photoURL,
+                        createdAt: serverTimestamp(),
+                        lastOnline: serverTimestamp(),
+                        friends: [],
+                        stats: {
+                            gamesPlayed: 0,
+                            wins: 0,
+                            kills: 0,
+                            deaths: 0
+                        }
+                    });
+                }
+            }
+            
+            async loadUserData() {
+                if (!this.currentUser) return;
+                
+                // Update UI with user info
+                document.getElementById('userName').textContent = this.currentUser.displayName;
+                document.getElementById('userEmail').textContent = this.currentUser.email;
+                document.getElementById('userAvatar').src = this.currentUser.photoURL;
+                
+                this.playerName = this.currentUser.displayName;
+                this.localPlayer.name = this.playerName;
+                
+                // Update online status
+                const { db, doc, updateDoc, serverTimestamp } = window.firebase;
+                await updateDoc(doc(db, 'users', this.currentUser.uid), {
+                    lastOnline: serverTimestamp(),
+                    isOnline: true
+                });
+            }
+            
+            async setupFriendsListener() {
+                if (!this.currentUser) return;
+                
+                const { db, collection, query, where, onSnapshot } = window.firebase;
+                
+                // Listen for friend requests
+                const requestsQuery = query(
+                    collection(db, 'friendRequests'),
+                    where('toUserId', '==', this.currentUser.uid),
+                    where('status', '==', 'pending')
+                );
+                
+                onSnapshot(requestsQuery, (snapshot) => {
+                    this.friendRequests = [];
+                    snapshot.forEach(doc => {
+                        this.friendRequests.push({ id: doc.id, ...doc.data() });
+                    });
+                    this.updateFriendsUI();
+                });
+                
+                // Listen for friends list changes
+                this.loadFriends();
+            }
+            
+            async loadFriends() {
+                if (!this.currentUser) return;
+                
+                const { db, doc, getDoc } = window.firebase;
+                const userDoc = await getDoc(doc(db, 'users', this.currentUser.uid));
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    const friendIds = userData.friends || [];
+                    
+                    // Load friend details
+                    this.friends.clear();
+                    for (const friendId of friendIds) {
+                        const friendDoc = await getDoc(doc(db, 'users', friendId));
+                        if (friendDoc.exists()) {
+                            this.friends.set(friendId, friendDoc.data());
+                        }
+                    }
+                    
+                    this.updateFriendsUI();
+                }
+            }
+            
+            async sendFriendRequest() {
+                const email = document.getElementById('friendEmail').value.trim();
+                if (!email) return;
+                
+                const status = document.getElementById('addFriendStatus');
+                status.classList.remove('hidden');
+                status.textContent = 'Enviando pedido...';
+                status.className = 'status status-info';
+                
+                try {
+                    const { db, collection, query, where, getDocs, addDoc, serverTimestamp } = window.firebase;
+                    
+                    // Find user by email
+                    const usersQuery = query(collection(db, 'users'), where('email', '==', email));
+                    const usersSnap = await getDocs(usersQuery);
+                    
+                    if (usersSnap.empty) {
+                        status.textContent = 'Usuário não encontrado';
+                        status.className = 'status status-error';
+                        return;
+                    }
+                    
+                    const targetUser = usersSnap.docs[0];
+                    const targetUserId = targetUser.id;
+                    
+                    if (targetUserId === this.currentUser.uid) {
+                        status.textContent = 'Você não pode adicionar a si mesmo';
+                        status.className = 'status status-error';
+                        return;
+                    }
+                    
+                    // Check if already friends
+                    if (this.friends.has(targetUserId)) {
+                        status.textContent = 'Vocês já são amigos';
+                        status.className = 'status status-error';
+                        return;
+                    }
+                    
+                    // Check if request already exists
+                    const requestsQuery = query(
+                        collection(db, 'friendRequests'),
+                        where('fromUserId', '==', this.currentUser.uid),
+                        where('toUserId', '==', targetUserId),
+                        where('status', '==', 'pending')
+                    );
+                    const existingRequests = await getDocs(requestsQuery);
+                    
+                    if (!existingRequests.empty) {
+                        status.textContent = 'Pedido já enviado';
+                        status.className = 'status status-warning';
+                        return;
+                    }
+                    
+                    // Send friend request
+                    await addDoc(collection(db, 'friendRequests'), {
+                        fromUserId: this.currentUser.uid,
+                        fromUserName: this.currentUser.displayName,
+                        fromUserEmail: this.currentUser.email,
+                        fromUserPhoto: this.currentUser.photoURL,
+                        toUserId: targetUserId,
+                        toUserName: targetUser.data().name,
+                        toUserEmail: targetUser.data().email,
+                        status: 'pending',
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    status.textContent = 'Pedido enviado com sucesso!';
+                    status.className = 'status status-success';
+                    document.getElementById('friendEmail').value = '';
+                    
+                } catch (error) {
+                    console.error('Error sending friend request:', error);
+                    status.textContent = 'Erro ao enviar pedido';
+                    status.className = 'status status-error';
+                }
+            }
+            
+            async acceptFriendRequest(requestId, fromUserId) {
+                try {
+                    const { db, doc, updateDoc, arrayUnion } = window.firebase;
+                    
+                    // Update request status
+                    await updateDoc(doc(db, 'friendRequests', requestId), {
+                        status: 'accepted'
+                    });
+                    
+                    // Add to both users' friends lists
+                    await updateDoc(doc(db, 'users', this.currentUser.uid), {
+                        friends: arrayUnion(fromUserId)
+                    });
+                    
+                    await updateDoc(doc(db, 'users', fromUserId), {
+                        friends: arrayUnion(this.currentUser.uid)
+                    });
+                    
+                    this.loadFriends();
+                } catch (error) {
+                    console.error('Error accepting friend request:', error);
+                }
+            }
+            
+            async rejectFriendRequest(requestId) {
+                try {
+                    const { db, doc, updateDoc } = window.firebase;
+                    await updateDoc(doc(db, 'friendRequests', requestId), {
+                        status: 'rejected'
+                    });
+                } catch (error) {
+                    console.error('Error rejecting friend request:', error);
+                }
+            }
+            
+            showFriendsPanel() {
+                document.getElementById('friendsPanel').classList.add('show');
+                this.updateFriendsUI();
+            }
+            
+            closeFriendsPanel() {
+                document.getElementById('friendsPanel').classList.remove('show');
+            }
+            
+            showFriendsTab(tabName) {
+                // Update tab buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                
+                // Show/hide tab content
+                document.getElementById('friendsListTab').classList.toggle('hidden', tabName !== 'list');
+                document.getElementById('friendsRequestsTab').classList.toggle('hidden', tabName !== 'requests');
+                document.getElementById('addFriendTab').classList.toggle('hidden', tabName !== 'add');
+            }
+            
+            updateFriendsUI() {
+                this.updateFriendsList();
+                this.updateFriendRequests();
+            }
+            
+            updateFriendsList() {
+                const friendsList = document.getElementById('friendsList');
+                friendsList.innerHTML = '';
+                
+                if (this.friends.size === 0) {
+                    friendsList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary);">Nenhum amigo ainda</p>';
+                    return;
+                }
+                
+                this.friends.forEach((friend, friendId) => {
+                    const isOnline = this.onlineFriends.has(friendId);
+                    const friendItem = document.createElement('div');
+                    friendItem.className = 'friend-item';
+                    friendItem.innerHTML = `
+                        <img src="${friend.photoURL || '/api/placeholder/32/32'}" class="friend-avatar" alt="Avatar">
+                        <div class="friend-info">
+                            <div class="friend-name">${friend.name}</div>
+                            <div class="friend-status ${isOnline ? 'online' : ''}">
+                                ${isOnline ? '• Online' : '• Offline'}
+                            </div>
+                        </div>
+                        <div class="friend-actions">
+                            ${isOnline ? `<button class="btn-small btn-primary-small" onclick="game.inviteFriend('${friendId}')">Convidar</button>` : ''}
+                            <button class="btn-small btn-secondary-small" onclick="game.removeFriend('${friendId}')">Remover</button>
+                        </div>
+                    `;
+                    friendsList.appendChild(friendItem);
+                });
+            }
+            
+            updateFriendRequests() {
+                const requestsList = document.getElementById('friendRequests');
+                requestsList.innerHTML = '';
+                
+                if (this.friendRequests.length === 0) {
+                    requestsList.innerHTML = '<p style="text-align: center; color: var(--color-text-secondary);">Nenhum pedido pendente</p>';
+                    return;
+                }
+                
+                this.friendRequests.forEach(request => {
+                    const requestItem = document.createElement('div');
+                    requestItem.className = 'friend-request';
+                    requestItem.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <img src="${request.fromUserPhoto || '/api/placeholder/32/32'}" class="friend-avatar" alt="Avatar">
+                            <div>
+                                <div class="friend-name">${request.fromUserName}</div>
+                                <div class="friend-status">${request.fromUserEmail}</div>
+                            </div>
+                        </div>
+                        <p style="margin: 8px 0; font-size: 14px;">Quer ser seu amigo</p>
+                        <div class="request-actions">
+                            <button class="btn-small btn-primary-small" onclick="game.acceptFriendRequest('${request.id}', '${request.fromUserId}')">Aceitar</button>
+                            <button class="btn-small btn-secondary-small" onclick="game.rejectFriendRequest('${request.id}')">Recusar</button>
+                        </div>
+                    `;
+                    requestsList.appendChild(requestItem);
+                });
+            }
+            
+            async inviteFriend(friendId) {
+                // TODO: Implement friend invitation to current lobby/room
+                alert('Convite enviado! (Funcionalidade em desenvolvimento)');
+            }
+            
+            async removeFriend(friendId) {
+                if (!confirm('Tem certeza que deseja remover este amigo?')) return;
+                
+                try {
+                    const { db, doc, updateDoc, arrayRemove } = window.firebase;
+                    
+                    // Remove from both users' friends lists
+                    await updateDoc(doc(db, 'users', this.currentUser.uid), {
+                        friends: arrayRemove(friendId)
+                    });
+                    
+                    await updateDoc(doc(db, 'users', friendId), {
+                        friends: arrayRemove(this.currentUser.uid)
+                    });
+                    
+                    this.loadFriends();
+                } catch (error) {
+                    console.error('Error removing friend:', error);
+                }
             }
             
             detectMobile() {
@@ -1142,7 +1944,11 @@
             showMainMenu() {
                 this.gameState = 'menu';
                 this.hideAllMenus();
-                document.getElementById('mainMenu').classList.remove('hidden');
+                if (this.currentUser) {
+                    document.getElementById('mainMenu').classList.remove('hidden');
+                } else {
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                }
                 this.cleanupConnections();
             }
             
@@ -1278,7 +2084,7 @@
             
             hideAllMenus() {
                 const menus = [
-                    'mainMenu', 'hostMenu', 'joinMenu', 'settingsMenu', 
+                    'loginScreen', 'mainMenu', 'hostMenu', 'joinMenu', 'settingsMenu', 
                     'instructionsMenu', 'characterSelection', 'lobbyMenu', 'gameOverMenu'
                 ];
                 menus.forEach(id => {
@@ -1360,8 +2166,19 @@
                 const container = document.getElementById('chatMessages');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = 'chat-message';
+                
+                const timeStr = new Date(message.timestamp || Date.now()).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
                 messageDiv.innerHTML = `
-                    <span class="chat-sender">${message.sender}:</span> ${message.text}
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        ${message.senderPhoto ? `<img src="${message.senderPhoto}" style="width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--color-border);" alt="Avatar">` : ''}
+                        <span class="chat-sender">${message.sender}</span>
+                        <span style="font-size: 11px; color: var(--color-text-secondary);">${timeStr}</span>
+                    </div>
+                    <div style="margin-left: ${message.senderPhoto ? '28px' : '0'}; word-wrap: break-word;">${message.text}</div>
                 `;
                 container.appendChild(messageDiv);
                 container.scrollTop = container.scrollHeight;
@@ -1378,6 +2195,37 @@
                 });
                 
                 this.startGame();
+            }
+            
+            initializeGameMode() {
+                switch (this.gameMode) {
+                    case 'bots':
+                        // Spawn bots
+                        const botCount = GAME_MODES.bots.bot_count;
+                        for (let i = 0; i < botCount; i++) {
+                            const bot = this.createBot(`bot_${i}`, GAME_MODES.bots.bot_difficulty);
+                            this.bots.push(bot);
+                        }
+                        break;
+                        
+                    case 'zombies':
+                        // Initialize zombie mode
+                        this.waveNumber = 1;
+                        this.zombiesKilled = 0;
+                        this.gameTimer = 0;
+                        this.spawnZombieWave();
+                        break;
+                        
+                    case 'team_vs_team':
+                        // Assign teams
+                        this.localPlayer.team = 1;
+                        let teamAssignment = 2;
+                        this.remotePlayers.forEach(player => {
+                            player.team = teamAssignment;
+                            teamAssignment = teamAssignment === 1 ? 2 : 1;
+                        });
+                        break;
+                }
             }
             
             returnToLobby() {
@@ -1417,6 +2265,7 @@
                     document.getElementById('roomCodeDisplay').textContent = this.roomCode;
                     document.getElementById('roomCodeContainer').classList.remove('hidden');
                     document.getElementById('waitingMessage').classList.remove('hidden');
+                    this.setupRoomChat(); // Initialize Firebase chat
                 });
                 
                 this.peer.on('connection', (conn) => {
@@ -1429,6 +2278,501 @@
                     document.getElementById('hostStatus').textContent = 'Error: ' + err.message;
                     document.getElementById('hostStatus').className = 'status status-error';
                 });
+            }
+            
+            // Bot AI System
+            createBot(id, difficulty = 'medium') {
+                const characters = Object.values(CHARACTERS);
+                const randomChar = characters[Math.floor(Math.random() * characters.length)];
+                
+                const difficultySettings = {
+                    easy: { aimAccuracy: 0.3, reactionTime: 800, shootFrequency: 0.4 },
+                    medium: { aimAccuracy: 0.6, reactionTime: 500, shootFrequency: 0.7 },
+                    hard: { aimAccuracy: 0.8, reactionTime: 200, shootFrequency: 0.9 }
+                };
+                
+                const settings = difficultySettings[difficulty] || difficultySettings.medium;
+                
+                return {
+                    id: id,
+                    name: `Bot ${id}`,
+                    character: randomChar,
+                    x: 200 + Math.random() * 600,
+                    y: 200 + Math.random() * 400,
+                    health: randomChar.health,
+                    maxHealth: randomChar.health,
+                    angle: 0,
+                    score: 0,
+                    isAlive: true,
+                    isBot: true,
+                    difficulty: difficulty,
+                    ...settings,
+                    lastShot: 0,
+                    lastSpecial: 0,
+                    target: null,
+                    lastTargetUpdate: 0,
+                    pathfinding: {
+                        targetX: 200 + Math.random() * 600,
+                        targetY: 200 + Math.random() * 400,
+                        lastPathUpdate: 0
+                    }
+                };
+            }
+            
+            updateBots(deltaTime) {
+                const now = Date.now();
+                if (now - this.lastBotUpdate < this.botUpdateInterval) return;
+                this.lastBotUpdate = now;
+                
+                this.bots.forEach(bot => {
+                    if (!bot.isAlive) return;
+                    
+                    this.updateBotAI(bot, deltaTime);
+                    this.updateBotMovement(bot, deltaTime);
+                    this.updateBotCombat(bot, deltaTime);
+                });
+            }
+            
+            updateBotAI(bot, deltaTime) {
+                const now = Date.now();
+                
+                // Update target every 500ms
+                if (now - bot.lastTargetUpdate > 500) {
+                    bot.lastTargetUpdate = now;
+                    
+                    let nearestTarget = null;
+                    let nearestDistance = Infinity;
+                    
+                    // Check local player
+                    if (this.localPlayer.isAlive) {
+                        const dx = this.localPlayer.x - bot.x;
+                        const dy = this.localPlayer.y - bot.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < nearestDistance && dist < 300) {
+                            nearestDistance = dist;
+                            nearestTarget = this.localPlayer;
+                        }
+                    }
+                    
+                    // Check remote players
+                    this.remotePlayers.forEach(player => {
+                        if (!player.isAlive) return;
+                        
+                        const dx = player.x - bot.x;
+                        const dy = player.y - bot.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < nearestDistance && dist < 300) {
+                            nearestDistance = dist;
+                            nearestTarget = player;
+                        }
+                    });
+                    
+                    bot.target = nearestTarget;
+                }
+                
+                // Update pathfinding if no target
+                if (!bot.target && now - bot.pathfinding.lastPathUpdate > 2000) {
+                    bot.pathfinding.lastPathUpdate = now;
+                    bot.pathfinding.targetX = 100 + Math.random() * (this.currentMap.width - 200);
+                    bot.pathfinding.targetY = 100 + Math.random() * (this.currentMap.height - 200);
+                }
+            }
+            
+            updateBotMovement(bot, deltaTime) {
+                let targetX, targetY;
+                
+                if (bot.target) {
+                    // Move towards or away from target based on strategy
+                    const dx = bot.target.x - bot.x;
+                    const dy = bot.target.y - bot.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > 150) {
+                        // Move closer
+                        targetX = bot.x + (dx / dist) * 100;
+                        targetY = bot.y + (dy / dist) * 100;
+                    } else if (dist < 80) {
+                        // Back away
+                        targetX = bot.x - (dx / dist) * 100;
+                        targetY = bot.y - (dy / dist) * 100;
+                    } else {
+                        // Strafe around target
+                        const perpX = -dy / dist;
+                        const perpY = dx / dist;
+                        targetX = bot.x + perpX * 50;
+                        targetY = bot.y + perpY * 50;
+                    }
+                } else {
+                    // Move to pathfinding target
+                    targetX = bot.pathfinding.targetX;
+                    targetY = bot.pathfinding.targetY;
+                }
+                
+                // Move towards target
+                const moveX = targetX - bot.x;
+                const moveY = targetY - bot.y;
+                const moveDist = Math.sqrt(moveX * moveX + moveY * moveY);
+                
+                if (moveDist > 5) {
+                    const speed = bot.character.speed * deltaTime;
+                    const newX = bot.x + (moveX / moveDist) * speed;
+                    const newY = bot.y + (moveY / moveDist) * speed;
+                    
+                    // Check collision
+                    if (this.canMoveToBot(newX, bot.y)) {
+                        bot.x = newX;
+                    }
+                    if (this.canMoveToBot(bot.x, newY)) {
+                        bot.y = newY;
+                    }
+                }
+                
+                // Update angle to face target
+                if (bot.target) {
+                    const dx = bot.target.x - bot.x;
+                    const dy = bot.target.y - bot.y;
+                    bot.angle = Math.atan2(dy, dx);
+                }
+            }
+            
+            canMoveToBot(x, y) {
+                const botRect = {
+                    x: x - this.PLAYER_SIZE,
+                    y: y - this.PLAYER_SIZE,
+                    w: this.PLAYER_SIZE * 2,
+                    h: this.PLAYER_SIZE * 2
+                };
+                
+                // Check map bounds
+                if (x < this.PLAYER_SIZE || x > this.currentMap.width - this.PLAYER_SIZE ||
+                    y < this.PLAYER_SIZE || y > this.currentMap.height - this.PLAYER_SIZE) {
+                    return false;
+                }
+                
+                // Check obstacles
+                return !this.obstacles.some(obstacle => {
+                    if (obstacle.destroyed) return false;
+                    return this.checkRectCollision(botRect, obstacle);
+                });
+            }
+            
+            updateBotCombat(bot, deltaTime) {
+                if (!bot.target || !bot.isAlive) return;
+                
+                const now = Date.now();
+                const dx = bot.target.x - bot.x;
+                const dy = bot.target.y - bot.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Shooting logic
+                if (distance < bot.character.attack.range) {
+                    const fireRate = bot.character.attack.fire_rate;
+                    if (now - bot.lastShot > fireRate && Math.random() < bot.shootFrequency) {
+                        bot.lastShot = now;
+                        
+                        // Add aim inaccuracy
+                        const accuracy = bot.aimAccuracy;
+                        const maxError = (1 - accuracy) * 0.5; // Max error in radians
+                        const errorAngle = (Math.random() - 0.5) * maxError;
+                        const adjustedAngle = bot.angle + errorAngle;
+                        
+                        // Create bot bullet
+                        const bullet = {
+                            x: bot.x + Math.cos(adjustedAngle) * 20,
+                            y: bot.y + Math.sin(adjustedAngle) * 20,
+                            vx: Math.cos(adjustedAngle) * this.BULLET_SPEED,
+                            vy: Math.sin(adjustedAngle) * this.BULLET_SPEED,
+                            owner: bot.id,
+                            damage: bot.character.attack.damage,
+                            trail: [],
+                            id: Math.random().toString(36)
+                        };
+                        
+                        this.bullets.push(bullet);
+                        this.createMuzzleFlash(bot.x, bot.y, adjustedAngle);
+                    }
+                }
+                
+                // Special ability logic
+                if (now - bot.lastSpecial > 8000 && Math.random() < 0.1) {
+                    bot.lastSpecial = now;
+                    this.performBotSpecial(bot);
+                }
+            }
+            
+            performBotSpecial(bot) {
+                const special = bot.character.special;
+                
+                switch (special.type) {
+                    case 'dash':
+                    case 'stealth_dash':
+                        const distance = 80;
+                        const newX = bot.x + Math.cos(bot.angle) * distance;
+                        const newY = bot.y + Math.sin(bot.angle) * distance;
+                        
+                        if (this.canMoveToBot(newX, newY)) {
+                            bot.x = newX;
+                            bot.y = newY;
+                        }
+                        this.createDashEffect(bot.x, bot.y);
+                        break;
+                        
+                    case 'shockwave':
+                        this.createShockwaveEffect(bot.x, bot.y, 80);
+                        // Damage nearby players
+                        if (this.localPlayer.isAlive) {
+                            const dx = this.localPlayer.x - bot.x;
+                            const dy = this.localPlayer.y - bot.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            if (dist < 80) {
+                                this.localPlayer.health -= 40;
+                                this.createBloodEffect(this.localPlayer.x, this.localPlayer.y);
+                                if (this.localPlayer.health <= 0) {
+                                    this.playerDied(this.localPlayer.id);
+                                    bot.score++;
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+            
+            // Zombie System
+            createZombie(id) {
+                return {
+                    id: id,
+                    name: `Zombie ${id}`,
+                    avatar: '🧟',
+                    x: Math.random() < 0.5 ? -50 : this.currentMap.width + 50,
+                    y: 100 + Math.random() * (this.currentMap.height - 200),
+                    health: 60 + (this.waveNumber * 10),
+                    maxHealth: 60 + (this.waveNumber * 10),
+                    speed: 80 + (this.waveNumber * 5),
+                    damage: 30 + (this.waveNumber * 5),
+                    angle: 0,
+                    isAlive: true,
+                    isZombie: true,
+                    target: null,
+                    lastAttack: 0,
+                    attackRange: 25
+                };
+            }
+            
+            updateZombies(deltaTime) {
+                if (this.gameMode !== 'zombies' || this.gameState !== 'playing') return;
+                
+                this.zombies.forEach((zombie, index) => {
+                    if (!zombie.isAlive) return;
+                    
+                    this.updateZombieAI(zombie, deltaTime);
+                    this.updateZombieMovement(zombie, deltaTime);
+                    this.updateZombieCombat(zombie);
+                });
+            }
+            
+            updateZombieAI(zombie, deltaTime) {
+                let nearestTarget = null;
+                let nearestDistance = Infinity;
+                
+                // Find nearest human player
+                if (this.localPlayer.isAlive) {
+                    const dx = this.localPlayer.x - zombie.x;
+                    const dy = this.localPlayer.y - zombie.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < nearestDistance) {
+                        nearestDistance = dist;
+                        nearestTarget = this.localPlayer;
+                    }
+                }
+                
+                this.remotePlayers.forEach(player => {
+                    if (!player.isAlive) return;
+                    
+                    const dx = player.x - zombie.x;
+                    const dy = player.y - zombie.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < nearestDistance) {
+                        nearestDistance = dist;
+                        nearestTarget = player;
+                    }
+                });
+                
+                zombie.target = nearestTarget;
+                
+                if (zombie.target) {
+                    const dx = zombie.target.x - zombie.x;
+                    const dy = zombie.target.y - zombie.y;
+                    zombie.angle = Math.atan2(dy, dx);
+                }
+            }
+            
+            updateZombieMovement(zombie, deltaTime) {
+                if (!zombie.target) return;
+                
+                const dx = zombie.target.x - zombie.x;
+                const dy = zombie.target.y - zombie.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > zombie.attackRange) {
+                    const speed = zombie.speed * deltaTime;
+                    const newX = zombie.x + (dx / dist) * speed;
+                    const newY = zombie.y + (dy / dist) * speed;
+                    
+                    // Simple collision check
+                    if (this.canMoveToBot(newX, zombie.y)) {
+                        zombie.x = newX;
+                    }
+                    if (this.canMoveToBot(zombie.x, newY)) {
+                        zombie.y = newY;
+                    }
+                }
+            }
+            
+            updateZombieCombat(zombie) {
+                if (!zombie.target || !zombie.isAlive) return;
+                
+                const now = Date.now();
+                const dx = zombie.target.x - zombie.x;
+                const dy = zombie.target.y - zombie.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < zombie.attackRange && now - zombie.lastAttack > 1000) {
+                    zombie.lastAttack = now;
+                    
+                    // Damage target
+                    if (zombie.target === this.localPlayer) {
+                        this.localPlayer.health -= zombie.damage;
+                        this.createBloodEffect(this.localPlayer.x, this.localPlayer.y);
+                        
+                        if (this.localPlayer.health <= 0) {
+                            this.playerDied(this.localPlayer.id);
+                        }
+                    }
+                    
+                    // Visual effect
+                    this.createHitEffect(zombie.x, zombie.y);
+                }
+            }
+            
+            spawnZombieWave() {
+                if (this.gameMode !== 'zombies') return;
+                
+                const zombieCount = Math.floor(GAME_MODES.zombies.zombies_per_wave * Math.pow(GAME_MODES.zombies.wave_multiplier, this.waveNumber - 1));
+                
+                for (let i = 0; i < zombieCount; i++) {
+                    const zombie = this.createZombie(`zombie_${this.waveNumber}_${i}`);
+                    this.zombies.push(zombie);
+                }
+                
+                // Add system message
+                this.addChatMessage({
+                    sender: 'Sistema',
+                    text: `Onda ${this.waveNumber} iniciada! ${zombieCount} zumbis apareceram!`,
+                    timestamp: Date.now(),
+                    senderPhoto: null
+                });
+            }
+            
+            // Game Mode Logic
+            updateGameMode(deltaTime) {
+                if (this.gameState !== 'playing') return;
+                
+                this.gameTimer += deltaTime * 1000;
+                
+                switch (this.gameMode) {
+                    case 'zombies':
+                        this.updateZombieMode();
+                        break;
+                        
+                    case 'bots':
+                        this.updateBotMode();
+                        break;
+                        
+                    case 'team_vs_team':
+                        this.updateTeamMode();
+                        break;
+                }
+            }
+            
+            updateZombieMode() {
+                const mode = GAME_MODES.zombies;
+                
+                // Check if wave is complete
+                const aliveZombies = this.zombies.filter(z => z.isAlive).length;
+                
+                if (aliveZombies === 0 && this.gameTimer > mode.wave_duration) {
+                    this.waveNumber++;
+                    this.gameTimer = 0;
+                    this.spawnZombieWave();
+                }
+                
+                // Check if all players are dead
+                const alivePlayers = [this.localPlayer].concat(Array.from(this.remotePlayers.values())).filter(p => p.isAlive).length;
+                
+                if (alivePlayers === 0) {
+                    this.endZombieGame();
+                }
+            }
+            
+            updateBotMode() {
+                const mode = GAME_MODES.bots;
+                
+                // Check if survive time reached
+                if (this.gameTimer >= mode.win_target) {
+                    this.endGame('Sobreviveram ao tempo limite!');
+                }
+                
+                // Check if all players dead
+                const alivePlayers = [this.localPlayer].concat(Array.from(this.remotePlayers.values())).filter(p => p.isAlive).length;
+                
+                if (alivePlayers === 0) {
+                    this.endGame('Todos os jogadores foram eliminados!');
+                }
+            }
+            
+            updateTeamMode() {
+                const mode = GAME_MODES.team_vs_team;
+                
+                // Update team scores
+                let team1Score = 0, team2Score = 0;
+                
+                if (this.localPlayer.team === 1) team1Score += this.localPlayer.score;
+                else team2Score += this.localPlayer.score;
+                
+                this.remotePlayers.forEach(player => {
+                    if (player.team === 1) team1Score += player.score;
+                    else team2Score += player.score;
+                });
+                
+                this.teamScores.team1 = team1Score;
+                this.teamScores.team2 = team2Score;
+                
+                // Check win condition
+                if (team1Score >= mode.win_target) {
+                    this.endGame('Equipe Azul Venceu!');
+                } else if (team2Score >= mode.win_target) {
+                    this.endGame('Equipe Vermelha Venceu!');
+                }
+            }
+            
+            endZombieGame() {
+                this.gameState = 'gameOver';
+                this.hideAllMenus();
+                document.getElementById('gameOverMenu').classList.remove('hidden');
+                
+                document.getElementById('gameOverTitle').textContent = `Sobreviveram ${this.waveNumber - 1} ondas!`;
+                
+                const stats = document.getElementById('gameOverStats');
+                stats.innerHTML = `
+                    <h3>Estatísticas Finais</h3>
+                    <div>Ondas Sobrevividas: ${this.waveNumber - 1}</div>
+                    <div>Zumbis Eliminados: ${this.zombiesKilled}</div>
+                    <div>Tempo Sobrevivido: ${Math.floor(this.gameTimer / 60000)}:${Math.floor((this.gameTimer % 60000) / 1000).toString().padStart(2, '0')}</div>
+                `;
             }
             
             joinRoom() {
@@ -1550,6 +2894,7 @@
                 this.bullets = [];
                 this.particles = [];
                 this.loadMapObstacles();
+                this.initializeGameMode();
                 
                 // Enable mobile controls if needed
                 if (this.isMobile) {
@@ -1764,7 +3109,33 @@
                     case 'shockwave':
                         this.performShockwave();
                         break;
-                }
+                    case 'turret':
+                        this.performTurret();
+                        break;
+                    case 'fire_wall':
+                        this.performFireWall();
+                        break;
+                    case 'mass_heal':
+                        this.performMassHeal();
+                        break;
+                    case 'blood_rage':
+                        this.performBloodRage();
+                        break;
+                    case 'piercing_arrow':
+                        this.performPiercingArrow();
+                        break;
+                    case 'headshot':
+                        this.performHeadshot();
+                        break;
+                    case 'meteor':
+                        this.performMeteor();
+                        break;
+                    case 'spin_attack':
+                        this.performSpinAttack();
+                        break;
+                    case 'shield_slam':
+                        this.performShieldSlam();
+                        break;
                 
                 this.broadcastMessage({
                     type: 'special',
@@ -1799,6 +3170,233 @@
                 }
                 
                 this.createDashEffect(this.localPlayer.x, this.localPlayer.y);
+            }
+            
+            performTurret() {
+                // Engineer's turret ability
+                const turret = {
+                    id: Math.random().toString(36),
+                    x: this.localPlayer.x + Math.cos(this.localPlayer.angle) * 40,
+                    y: this.localPlayer.y + Math.sin(this.localPlayer.angle) * 40,
+                    health: 100,
+                    maxHealth: 100,
+                    range: 200,
+                    damage: 25,
+                    fireRate: 500,
+                    lastShot: 0,
+                    ownerId: this.localPlayer.id,
+                    lifespan: 30000, // 30 seconds
+                    createdAt: Date.now()
+                };
+                
+                this.turrets.push(turret);
+                this.createExplosionEffect(turret.x, turret.y);
+            }
+            
+            performFireWall() {
+                // Pyro's fire wall ability
+                const wallLength = 120;
+                const wallWidth = 20;
+                
+                const fireWall = {
+                    id: Math.random().toString(36),
+                    x: this.localPlayer.x + Math.cos(this.localPlayer.angle) * 50 - wallWidth/2,
+                    y: this.localPlayer.y + Math.sin(this.localPlayer.angle) * 50 - wallLength/2,
+                    width: wallWidth,
+                    height: wallLength,
+                    damage: 15,
+                    tickRate: 200,
+                    lastTick: 0,
+                    ownerId: this.localPlayer.id,
+                    duration: 8000, // 8 seconds
+                    createdAt: Date.now(),
+                    angle: this.localPlayer.angle
+                };
+                
+                this.fireWalls.push(fireWall);
+                
+                // Create visual effect
+                for (let i = 0; i < 20; i++) {
+                    this.particles.push({
+                        x: fireWall.x + Math.random() * fireWall.width,
+                        y: fireWall.y + Math.random() * fireWall.height,
+                        vx: (Math.random() - 0.5) * 50,
+                        vy: (Math.random() - 0.5) * 50,
+                        life: 2,
+                        maxLife: 2,
+                        alpha: 1,
+                        color: '#ff4400',
+                        size: 4,
+                        type: 'fire'
+                    });
+                }
+            }
+            
+            performMassHeal() {
+                // Healer's mass heal ability
+                const healRadius = 100;
+                const healAmount = 50;
+                
+                // Heal local player
+                if (this.localPlayer.isAlive) {
+                    this.localPlayer.health = Math.min(this.localPlayer.maxHealth, this.localPlayer.health + healAmount);
+                }
+                
+                // Heal nearby allies
+                this.remotePlayers.forEach(player => {
+                    if (!player.isAlive) return;
+                    
+                    const dx = player.x - this.localPlayer.x;
+                    const dy = player.y - this.localPlayer.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < healRadius) {
+                        player.health = Math.min(player.maxHealth, player.health + healAmount);
+                        this.createHealEffect(player.x, player.y);
+                    }
+                });
+                
+                this.createHealEffect(this.localPlayer.x, this.localPlayer.y);
+                this.createMassHealEffect(this.localPlayer.x, this.localPlayer.y, healRadius);
+            }
+            
+            performBloodRage() {
+                // Berserker's blood rage ability
+                this.localPlayer.rageMode = true;
+                this.localPlayer.rageDuration = 5000; // 5 seconds
+                this.localPlayer.rageStartTime = Date.now();
+                
+                // Visual effect
+                this.createRageEffect(this.localPlayer.x, this.localPlayer.y);
+            }
+            
+            performPiercingArrow() {
+                // Archer's piercing arrow
+                const bullet = {
+                    x: this.localPlayer.x,
+                    y: this.localPlayer.y,
+                    vx: Math.cos(this.localPlayer.angle) * this.BULLET_SPEED * 1.5,
+                    vy: Math.sin(this.localPlayer.angle) * this.BULLET_SPEED * 1.5,
+                    owner: 'local',
+                    damage: 60,
+                    trail: [],
+                    piercing: true,
+                    pierceCount: 0,
+                    maxPierces: 3,
+                    special: true,
+                    id: Math.random().toString(36)
+                };
+                
+                this.bullets.push(bullet);
+            }
+            
+            performHeadshot() {
+                // Sniper's precision headshot
+                const bullet = {
+                    x: this.localPlayer.x,
+                    y: this.localPlayer.y,
+                    vx: Math.cos(this.localPlayer.angle) * this.BULLET_SPEED * 2,
+                    vy: Math.sin(this.localPlayer.angle) * this.BULLET_SPEED * 2,
+                    owner: 'local',
+                    damage: 150, // Massive damage
+                    trail: [],
+                    headshot: true,
+                    special: true,
+                    id: Math.random().toString(36)
+                };
+                
+                this.bullets.push(bullet);
+                this.createMuzzleFlash(this.localPlayer.x, this.localPlayer.y, this.localPlayer.angle);
+            }
+            
+            performMeteor() {
+                // Mage's meteor ability
+                const targetX = this.localPlayer.x + Math.cos(this.localPlayer.angle) * 200;
+                const targetY = this.localPlayer.y + Math.sin(this.localPlayer.angle) * 200;
+                
+                // Create meteor impact after delay
+                setTimeout(() => {
+                    this.createMeteorImpact(targetX, targetY);
+                    
+                    // Damage players in area
+                    const damageRadius = 80;
+                    this.remotePlayers.forEach(player => {
+                        if (!player.isAlive) return;
+                        
+                        const dx = player.x - targetX;
+                        const dy = player.y - targetY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < damageRadius) {
+                            const damage = Math.max(20, 80 - dist);
+                            player.health -= damage;
+                            this.createBloodEffect(player.x, player.y);
+                            
+                            if (player.health <= 0) {
+                                this.playerDied(player.id);
+                                this.localPlayer.score++;
+                            }
+                        }
+                    });
+                }, 2000);
+                
+                // Visual indicator
+                this.createMeteorWarning(targetX, targetY);
+            }
+            
+            performSpinAttack() {
+                // Warrior's spin attack
+                const attackRadius = 60;
+                
+                this.remotePlayers.forEach(player => {
+                    if (!player.isAlive) return;
+                    
+                    const dx = player.x - this.localPlayer.x;
+                    const dy = player.y - this.localPlayer.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < attackRadius) {
+                        player.health -= 70;
+                        this.createBloodEffect(player.x, player.y);
+                        
+                        if (player.health <= 0) {
+                            this.playerDied(player.id);
+                            this.localPlayer.score++;
+                        }
+                    }
+                });
+                
+                this.createSpinAttackEffect(this.localPlayer.x, this.localPlayer.y, attackRadius);
+            }
+            
+            performShieldSlam() {
+                // Tank's shield slam
+                this.localPlayer.shieldMode = true;
+                this.localPlayer.shieldDuration = 3000; // 3 seconds
+                this.localPlayer.shieldStartTime = Date.now();
+                
+                // Knockback nearby enemies
+                const knockbackRadius = 50;
+                this.remotePlayers.forEach(player => {
+                    if (!player.isAlive) return;
+                    
+                    const dx = player.x - this.localPlayer.x;
+                    const dy = player.y - this.localPlayer.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < knockbackRadius && dist > 0) {
+                        // Knockback effect (simulated)
+                        player.health -= 40;
+                        this.createBloodEffect(player.x, player.y);
+                        
+                        if (player.health <= 0) {
+                            this.playerDied(player.id);
+                            this.localPlayer.score++;
+                        }
+                    }
+                });
+                
+                this.createShieldSlamEffect(this.localPlayer.x, this.localPlayer.y);
             }
             
             performRangeShot() {
@@ -2126,7 +3724,136 @@
                         maxLife: 1,
                         alpha: 1,
                         color: Math.random() > 0.5 ? '#ff4444' : '#ffaa00',
-                        size: 3 + Math.random() * 3
+                        size: 3 + Math.random() * 3,
+                        type: 'death'
+                    });
+                }
+            }
+            
+            createHealEffect(x, y) {
+                for (let i = 0; i < 15; i++) {
+                    const angle = (i / 15) * Math.PI * 2;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * 30,
+                        vy: Math.sin(angle) * 30 - 20,
+                        life: 1,
+                        maxLife: 1,
+                        alpha: 1,
+                        color: '#22c55e',
+                        size: 3,
+                        type: 'heal'
+                    });
+                }
+            }
+            
+            createMassHealEffect(x, y, radius) {
+                for (let i = 0; i < 30; i++) {
+                    const angle = (i / 30) * Math.PI * 2;
+                    this.particles.push({
+                        x: x + Math.cos(angle) * radius,
+                        y: y + Math.sin(angle) * radius,
+                        vx: Math.cos(angle) * 20,
+                        vy: Math.sin(angle) * 20,
+                        life: 0.8,
+                        maxLife: 0.8,
+                        alpha: 1,
+                        color: '#00ff88',
+                        size: 4,
+                        type: 'mass_heal'
+                    });
+                }
+            }
+            
+            createRageEffect(x, y) {
+                for (let i = 0; i < 25; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    this.particles.push({
+                        x: x + (Math.random() - 0.5) * 40,
+                        y: y + (Math.random() - 0.5) * 40,
+                        vx: Math.cos(angle) * 80,
+                        vy: Math.sin(angle) * 80,
+                        life: 0.8,
+                        maxLife: 0.8,
+                        alpha: 1,
+                        color: '#ff0000',
+                        size: 4,
+                        type: 'rage'
+                    });
+                }
+            }
+            
+            createMeteorWarning(x, y) {
+                // Create warning particles
+                for (let i = 0; i < 40; i++) {
+                    const angle = (i / 40) * Math.PI * 2;
+                    const radius = 80;
+                    this.particles.push({
+                        x: x + Math.cos(angle) * radius,
+                        y: y + Math.sin(angle) * radius,
+                        vx: 0,
+                        vy: 0,
+                        life: 2,
+                        maxLife: 2,
+                        alpha: 1,
+                        color: '#ff8800',
+                        size: 2,
+                        type: 'warning'
+                    });
+                }
+            }
+            
+            createMeteorImpact(x, y) {
+                for (let i = 0; i < 50; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * (100 + Math.random() * 100),
+                        vy: Math.sin(angle) * (100 + Math.random() * 100),
+                        life: 1.2,
+                        maxLife: 1.2,
+                        alpha: 1,
+                        color: Math.random() > 0.5 ? '#ff4400' : '#ffaa00',
+                        size: 4 + Math.random() * 4,
+                        type: 'meteor'
+                    });
+                }
+            }
+            
+            createSpinAttackEffect(x, y, radius) {
+                for (let i = 0; i < 32; i++) {
+                    const angle = (i / 32) * Math.PI * 2;
+                    this.particles.push({
+                        x: x + Math.cos(angle) * radius,
+                        y: y + Math.sin(angle) * radius,
+                        vx: Math.cos(angle) * 40,
+                        vy: Math.sin(angle) * 40,
+                        life: 0.6,
+                        maxLife: 0.6,
+                        alpha: 1,
+                        color: '#ffffff',
+                        size: 3,
+                        type: 'spin'
+                    });
+                }
+            }
+            
+            createShieldSlamEffect(x, y) {
+                for (let i = 0; i < 20; i++) {
+                    const angle = (i / 20) * Math.PI * 2;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * 120,
+                        vy: Math.sin(angle) * 120,
+                        life: 0.8,
+                        maxLife: 0.8,
+                        alpha: 1,
+                        color: '#4444ff',
+                        size: 4,
+                        type: 'shield'
                     });
                 }
             }
@@ -2682,26 +4409,32 @@
                 this.lastTime = now;
                 
                 this.updateGame(deltaTime);
+                this.updateBots(deltaTime);
+                this.updateZombies(deltaTime);
+                this.updateGameMode(deltaTime);
                 this.render();
                 
                 requestAnimationFrame(() => this.gameLoop());
             }
         }
         
-        // Initialize game
-        const game = new BattleArena2D();
-        
-        // Prevent context menu on canvas
-        document.getElementById('gameCanvas').addEventListener('contextmenu', e => e.preventDefault());
-        
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (game.gameState === 'playing') {
-                const maxWidth = Math.min(game.currentMap.width, window.innerWidth - 40);
-                const maxHeight = Math.min(game.currentMap.height, window.innerHeight - 40);
-                game.canvas.width = maxWidth;
-                game.canvas.height = maxHeight;
-            }
+        // Initialize game when DOM is loaded
+        let game;
+        document.addEventListener('DOMContentLoaded', () => {
+            game = new BattleArena2D();
+            
+            // Prevent context menu on canvas
+            document.getElementById('gameCanvas').addEventListener('contextmenu', e => e.preventDefault());
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (game.gameState === 'playing') {
+                    const maxWidth = Math.min(game.currentMap.width, window.innerWidth - 40);
+                    const maxHeight = Math.min(game.currentMap.height, window.innerHeight - 40);
+                    game.canvas.width = maxWidth;
+                    game.canvas.height = maxHeight;
+                }
+            });
         });
     </script>
 </body>
