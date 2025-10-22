@@ -118,6 +118,8 @@
             display: block;
             background: var(--arena-bg);
             border: 2px solid var(--color-border);
+            touch-action: none;
+            cursor: crosshair;
         }
 
         .container {
@@ -277,19 +279,134 @@
             background: var(--color-secondary-hover);
         }
 
-        /* Lobby Styles */
-        .lobby-section {
-            margin: var(--space-24) 0;
+        /* Lobby Styles - RESPONSIVE LAYOUT */
+        .lobby-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: var(--space-20);
+            height: 100vh;
+            padding: var(--space-20);
+            max-width: none;
+        }
+
+        .lobby-left {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-20);
+        }
+
+        .lobby-right {
+            display: flex;
+            flex-direction: column;
+            background: rgba(0,0,0,0.5);
+            border-radius: var(--radius-md);
+            padding: var(--space-20);
+        }
+
+        .room-code-box {
+            background: rgba(26, 188, 156, 0.2);
             padding: var(--space-16);
-            background: rgba(var(--color-brown-600-rgb), 0.05);
             border-radius: var(--radius-base);
+            text-align: center;
+            border: 1px solid var(--color-primary);
+        }
+
+        .room-code-box h3 {
+            color: var(--color-primary);
+            margin-bottom: var(--space-12);
+        }
+
+        .players-section {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .character-selection-container {
+            background: rgba(var(--color-brown-600-rgb), 0.1);
+            border-radius: var(--radius-base);
+            padding: var(--space-16);
             border: 1px solid var(--color-border);
         }
 
-        .lobby-section h3 {
+        .character-selection {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: var(--space-16);
+            padding: var(--space-20) 0;
+        }
+
+        .character-card {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-12);
+        }
+
+        .character-card:hover {
+            border-color: var(--color-primary);
+            transform: scale(1.05);
+            background: rgba(26, 188, 156, 0.2);
+        }
+
+        .character-card.selected {
+            border-color: var(--color-error);
+            background: rgba(231, 76, 60, 0.3);
+        }
+
+        .character-icon {
+            font-size: 48px;
+            margin-bottom: var(--space-8);
+        }
+
+        .character-name {
+            font-size: var(--font-size-xs);
+            text-align: center;
+        }
+
+        .chat-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: var(--radius-base);
+            padding: var(--space-16);
             margin-bottom: var(--space-16);
+            min-height: 200px;
+        }
+
+        .chat-message {
+            margin: var(--space-8) 0;
+            line-height: 1.4;
+        }
+
+        .chat-message strong {
             color: var(--color-primary);
-            font-size: var(--font-size-lg);
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: var(--space-12);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: var(--radius-sm);
+            padding: var(--space-12);
+            color: var(--color-text);
         }
 
         .players-list {
@@ -312,86 +429,35 @@
             border-left: 4px solid var(--color-primary);
         }
 
-        .character-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: var(--space-12);
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .character-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: var(--space-12);
-            background: var(--color-surface);
-            border: 2px solid var(--color-border);
+        .ready-button {
+            width: 100%;
+            padding: var(--space-16);
+            background: var(--color-success);
+            border: none;
             border-radius: var(--radius-base);
+            color: white;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
             cursor: pointer;
+            margin-top: var(--space-20);
             transition: all 0.2s;
-            text-align: center;
         }
 
-        .character-card:hover {
-            border-color: var(--color-primary);
-            background: var(--color-secondary);
+        .ready-button:hover {
+            background: var(--color-primary-hover);
         }
 
-        .character-card.selected {
-            border-color: var(--color-primary);
-            background: rgba(var(--color-teal-500-rgb), 0.2);
+        .start-button {
+            background: var(--color-error);
         }
 
-        .character-emoji {
-            font-size: 32px;
-            margin-bottom: var(--space-8);
+        .btn-danger {
+            background: var(--color-error);
+            color: var(--color-btn-primary-text);
         }
 
-        .character-name {
-            font-size: var(--font-size-xs);
-            font-weight: var(--font-weight-medium);
-        }
-
-        .chat-messages {
-            height: 150px;
-            overflow-y: auto;
-            padding: var(--space-12);
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-base);
-            margin-bottom: var(--space-12);
-        }
-
-        .chat-message {
-            margin: var(--space-8) 0;
-            line-height: 1.4;
-        }
-
-        .chat-message strong {
-            color: var(--color-primary);
-        }
-
-        .chat-input-container {
-            display: flex;
-            gap: var(--space-8);
-        }
-
-        .chat-input-container .input {
-            flex: 1;
-            margin: 0;
-        }
-
-        .chat-input-container .btn {
-            margin: 0;
-            padding: var(--space-8) var(--space-16);
-        }
-
-        .lobby-actions {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-12);
-            margin-top: var(--space-24);
+        .btn-danger:hover {
+            background: var(--color-red-400);
         }
 
         .player-status {
@@ -408,6 +474,109 @@
         .player-status.waiting {
             background: rgba(var(--color-orange-500-rgb), 0.2);
             color: var(--color-warning);
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .lobby-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 300px;
+                height: 100vh;
+                padding: var(--space-12);
+                gap: var(--space-12);
+            }
+            
+            .character-selection {
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--space-12);
+            }
+            
+            .character-icon {
+                font-size: 32px;
+            }
+            
+            .lobby-right {
+                max-height: 300px;
+            }
+            
+            .chat-messages {
+                min-height: 120px;
+            }
+            
+            .room-code-box {
+                padding: var(--space-12);
+            }
+            
+            .ready-button, .btn {
+                padding: var(--space-12);
+                font-size: var(--font-size-base);
+                min-height: 44px; /* Touch target size */
+            }
+        }
+        
+        /* GAME CONTROLS */
+        .game-ui {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            padding: var(--space-12);
+            border-radius: var(--radius-base);
+            color: white;
+            font-family: var(--font-family-base);
+        }
+        
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .joystick {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
+        }
+        
+        .joystick-handle {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .shoot-button {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 0, 0, 0.3);
+            border: 2px solid rgba(255, 0, 0, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: block;
+            }
         }
     </style>
 </head>
@@ -441,38 +610,43 @@
     </div>
 
     <!-- Lobby Screen -->
-    <div id="lobbyScreen" class="container hidden">
-        <div class="menu" style="max-width: 600px;">
-            <h2>Lobby</h2>
-            <div class="room-code" id="lobbyRoomCode"></div>
-            
-            <!-- Players List -->
-            <div class="lobby-section">
-                <h3>Jogadores</h3>
-                <div id="playersList" class="players-list"></div>
-            </div>
-            
-            <!-- Character Selection -->
-            <div class="lobby-section">
-                <h3>Escolha seu Personagem</h3>
-                <div id="characterGrid" class="character-grid"></div>
-            </div>
-            
-            <!-- Chat -->
-            <div class="lobby-section">
-                <h3>Chat</h3>
-                <div id="chatMessages" class="chat-messages"></div>
-                <div class="chat-input-container">
-                    <input type="text" id="chatInput" class="input" placeholder="Digite sua mensagem..." maxlength="100">
-                    <button class="btn" onclick="game && game.sendChat()">Enviar</button>
+    <div id="lobbyScreen" class="hidden">
+        <div class="lobby-container">
+            <!-- LADO ESQUERDO -->
+            <div class="lobby-left">
+                <div class="room-code-box">
+                    <h3>Código da Sala</h3>
+                    <div id="lobbyRoomCode" style="font-family: monospace; font-size: 24px; font-weight: bold; margin: 10px 0;">---</div>
+                    <button id="copyCodeBtn" class="btn-secondary" onclick="game && game.copyRoomCode()">📋 Copiar Código</button>
                 </div>
+                
+                <div class="players-section">
+                    <h3>Jogadores</h3>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+                
+                <div class="character-selection-container">
+                    <h3>Escolha seu Personagem</h3>
+                    <div class="character-selection" id="characterGrid">
+                        <!-- Personagens renderizados aqui -->
+                    </div>
+                </div>
+                
+                <button id="readyButton" class="ready-button" onclick="game && game.toggleReady()" disabled>Escolha um personagem</button>
+                <button id="startGameButton" class="ready-button start-button" style="display:none;" onclick="game && game.startGameAsHost()">🎮 Iniciar Jogo</button>
+                <button id="leaveRoomBtn" class="btn btn-danger" onclick="game && game.leaveRoom()">← Sair da Sala</button>
             </div>
             
-            <!-- Ready Button -->
-            <div class="lobby-actions">
-                <button id="readyButton" class="btn" onclick="game && game.toggleReady()" disabled>Escolha um personagem</button>
-                <button id="startGameButton" class="btn btn-secondary hidden" onclick="game && game.startGameAsHost()">Iniciar Jogo</button>
-                <button class="btn btn-secondary" onclick="game && game.leaveRoom()">← Sair da Sala</button>
+            <!-- LADO DIREITO - CHAT -->
+            <div class="lobby-right">
+                <h3>💬 Chat</h3>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Digite uma mensagem..." maxlength="500">
+                        <button id="sendChatBtn" class="btn btn-primary" onclick="game && game.sendChat()">Enviar</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -532,6 +706,22 @@
     <!-- Game Container -->
     <div id="gameContainer" class="game-container">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <!-- Game UI -->
+        <div class="game-ui" id="gameUI" style="display: none;">
+            <div id="healthDisplay">Vida: 100/100</div>
+            <div id="scoreDisplay">Score: 0</div>
+            <div id="characterDisplay">Personagem: -</div>
+            <button class="btn btn-secondary" onclick="game && game.pauseGame()" style="margin-top: 10px;">Pausar</button>
+        </div>
+        
+        <!-- Mobile Controls -->
+        <div class="mobile-controls" id="mobileControls" style="display: none;">
+            <div class="joystick" id="joystick">
+                <div class="joystick-handle" id="joystickHandle"></div>
+            </div>
+            <button class="shoot-button" id="shootButton">🎯</button>
+        </div>
     </div>
 
     <!-- Game Over -->
@@ -580,7 +770,268 @@
             measurementId: "G-89P0EVPL9X"
         };
 
-        // 4. GAME CLASS
+        // 4. CLASSE DE EFEITOS VISUAIS
+        class VisualEffects {
+            constructor(ctx) {
+                this.ctx = ctx;
+                this.particles = [];
+            }
+            
+            // Balas tracejantes com glow
+            drawBullet(bullet) {
+                const ctx = this.ctx;
+                
+                // Glow effect
+                ctx.save();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = bullet.color || '#ff6b6b';
+                
+                // Trail
+                ctx.strokeStyle = bullet.color || '#ff6b6b';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(bullet.x - bullet.vx * 5, bullet.y - bullet.vy * 5);
+                ctx.lineTo(bullet.x, bullet.y);
+                ctx.stroke();
+                
+                // Bullet core
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            // Partículas de sangue ao acertar jogador
+            createBloodParticles(x, y) {
+                for (let i = 0; i < 15; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 8,
+                        size: Math.random() * 4 + 2,
+                        life: 1,
+                        type: 'blood',
+                        color: '#c0392b'
+                    });
+                }
+            }
+            
+            // Fragmentação ao colidir com obstáculo
+            createFragments(x, y, color = '#95a5a6') {
+                for (let i = 0; i < 10; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: (Math.random() - 0.5) * 6,
+                        size: Math.random() * 3 + 1,
+                        life: 1,
+                        type: 'fragment',
+                        color: color
+                    });
+                }
+            }
+            
+            // Explosão ao usar habilidade especial
+            createExplosion(x, y, color = '#e74c3c') {
+                for (let i = 0; i < 30; i++) {
+                    const angle = (Math.PI * 2 * i) / 30;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * 10,
+                        vy: Math.sin(angle) * 10,
+                        size: Math.random() * 5 + 3,
+                        life: 1,
+                        type: 'explosion',
+                        color: color
+                    });
+                }
+            }
+            
+            // Atualizar e renderizar partículas
+            update() {
+                this.particles = this.particles.filter(p => p.life > 0);
+                
+                this.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                    p.life -= 0.02;
+                    
+                    // Renderizar
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.life;
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                });
+            }
+        }
+        
+        // 5. SISTEMA DE COMBATE
+        class CombatSystem {
+            constructor(game) {
+                this.game = game;
+                this.bullets = [];
+                this.obstacles = this.createObstacles();
+            }
+            
+            createObstacles() {
+                return [
+                    { x: 200, y: 150, w: 100, h: 20, destructible: false, health: 100, color: '#7f8c8d' },
+                    { x: 500, y: 300, w: 20, h: 100, destructible: false, health: 100, color: '#7f8c8d' },
+                    { x: 800, y: 200, w: 80, h: 80, destructible: true, health: 50, color: '#95a5a6' },
+                    { x: 300, y: 450, w: 150, h: 30, destructible: false, health: 100, color: '#7f8c8d' }
+                ];
+            }
+            
+            // Criar bala
+            shoot(player, targetX, targetY) {
+                const char = this.getCharacterStats(player.character || 'warrior');
+                const angle = Math.atan2(targetY - player.y, targetX - player.x);
+                
+                // Verificar cooldown
+                const now = Date.now();
+                if (player.lastShot && now - player.lastShot < char.fireRate) {
+                    return null;
+                }
+                
+                player.lastShot = now;
+                
+                const bullet = {
+                    id: this.generateId(),
+                    ownerId: player.id || 'local',
+                    x: player.x,
+                    y: player.y,
+                    vx: Math.cos(angle) * 10,
+                    vy: Math.sin(angle) * 10,
+                    damage: char.damage,
+                    range: char.range,
+                    distanceTraveled: 0,
+                    color: player.color || '#ff6b6b'
+                };
+                
+                this.bullets.push(bullet);
+                return bullet;
+            }
+            
+            generateId() {
+                return Math.random().toString(36).substr(2, 9);
+            }
+            
+            getCharacterStats(characterId) {
+                const stats = {
+                    warrior: { damage: 25, fireRate: 500, range: 600, health: 100 },
+                    mage: { damage: 35, fireRate: 800, range: 700, health: 80 },
+                    archer: { damage: 30, fireRate: 400, range: 800, health: 90 },
+                    assassin: { damage: 40, fireRate: 600, range: 500, health: 70 },
+                    tank: { damage: 20, fireRate: 700, range: 400, health: 150 },
+                    sniper: { damage: 60, fireRate: 1200, range: 1000, health: 75 },
+                    healer: { damage: 15, fireRate: 300, range: 500, health: 85 },
+                    pyro: { damage: 30, fireRate: 200, range: 300, health: 95 },
+                    engineer: { damage: 25, fireRate: 500, range: 600, health: 100 },
+                    berserker: { damage: 35, fireRate: 300, range: 400, health: 120 },
+                    ninja: { damage: 30, fireRate: 250, range: 500, health: 80 },
+                    paladin: { damage: 28, fireRate: 600, range: 550, health: 110 }
+                };
+                return stats[characterId] || stats.warrior;
+            }
+            
+            // Atualizar balas
+            updateBullets(players, effects) {
+                this.bullets = this.bullets.filter(bullet => {
+                    // Mover bala
+                    bullet.x += bullet.vx;
+                    bullet.y += bullet.vy;
+                    bullet.distanceTraveled += Math.sqrt(bullet.vx ** 2 + bullet.vy ** 2);
+                    
+                    // Verificar alcance máximo
+                    if (bullet.distanceTraveled > bullet.range) {
+                        return false;
+                    }
+                    
+                    // Verificar colisão com jogadores
+                    for (let [playerId, player] of players) {
+                        if (playerId === bullet.ownerId || !player.isAlive) continue;
+                        
+                        const dist = Math.sqrt((bullet.x - player.x) ** 2 + (bullet.y - player.y) ** 2);
+                        
+                        if (dist < 20) {
+                            // Aplicar dano
+                            player.health -= bullet.damage;
+                            
+                            // Efeitos visuais de sangue
+                            effects.createBloodParticles(bullet.x, bullet.y);
+                            
+                            // Verificar morte
+                            if (player.health <= 0) {
+                                player.health = 0;
+                                player.isAlive = false;
+                                effects.createExplosion(player.x, player.y, '#c0392b');
+                                
+                                // Respawn após 3 segundos
+                                setTimeout(() => {
+                                    const char = this.getCharacterStats(player.character || 'warrior');
+                                    player.health = char.health;
+                                    player.isAlive = true;
+                                    player.x = Math.random() * 1200;
+                                    player.y = Math.random() * 700;
+                                }, 3000);
+                            }
+                            
+                            return false;
+                        }
+                    }
+                    
+                    // Verificar colisão com obstáculos
+                    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                        const obstacle = this.obstacles[i];
+                        if (bullet.x > obstacle.x && bullet.x < obstacle.x + obstacle.w &&
+                            bullet.y > obstacle.y && bullet.y < obstacle.y + obstacle.h) {
+                            
+                            // Efeitos de fragmentação
+                            effects.createFragments(bullet.x, bullet.y, obstacle.color);
+                            
+                            // Destruir obstáculo se for destruível
+                            if (obstacle.destructible) {
+                                obstacle.health -= bullet.damage;
+                                if (obstacle.health <= 0) {
+                                    this.obstacles.splice(i, 1);
+                                    effects.createExplosion(obstacle.x + obstacle.w/2, obstacle.y + obstacle.h/2);
+                                }
+                            }
+                            
+                            return false;
+                        }
+                    }
+                    
+                    return true;
+                });
+            }
+            
+            renderObstacles(ctx) {
+                this.obstacles.forEach(obstacle => {
+                    ctx.fillStyle = obstacle.color;
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+                    
+                    if (obstacle.destructible && obstacle.health < 50) {
+                        ctx.strokeStyle = '#e74c3c';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+                    }
+                });
+            }
+        }
+
+        // 6. GAME CLASS
         class BattleArena2D {
             constructor() {
                 console.log('Inicializando Battle Arena 2D...');
@@ -593,6 +1044,10 @@
                 this.gameState = 'menu';
                 this.playerName = 'Jogador';
                 
+                // Inicializar sistemas
+                this.effects = new VisualEffects(this.ctx);
+                this.combat = new CombatSystem(this);
+                
                 // Game objects
                 this.localPlayer = {
                     x: 400,
@@ -601,11 +1056,14 @@
                     health: 100,
                     maxHealth: 100,
                     score: 0,
-                    isAlive: true
+                    isAlive: true,
+                    id: 'local',
+                    character: null,
+                    color: '#00ff00',
+                    lastShot: 0
                 };
                 
                 this.remotePlayers = new Map();
-                this.bullets = [];
                 this.lastTime = 0;
                 
                 // Controls
@@ -642,6 +1100,9 @@
                         this.shoot();
                     }
                 });
+                
+                // Touch controls
+                this.setupTouchControls();
             }
             
             // Menu functions
@@ -1022,19 +1483,21 @@
                 }
             }
             
-            // INICIALIZAR PERSONAGENS
+            // INICIALIZAR PERSONAGENS COM ÍCONES CORRETOS
             initializeCharacters() {
                 const characters = [
                     { id: 'warrior', name: 'Guerreiro', emoji: '⚔️' },
-                    { id: 'mage', name: 'Mago', emoji: '🧙' },
+                    { id: 'mage', name: 'Mago', emoji: '🔮' },
                     { id: 'archer', name: 'Arqueiro', emoji: '🏹' },
-                    { id: 'knight', name: 'Cavaleiro', emoji: '🛡️' },
                     { id: 'assassin', name: 'Assassino', emoji: '🗡️' },
                     { id: 'tank', name: 'Tanque', emoji: '🛡️' },
-                    { id: 'healer', name: 'Curandeiro', emoji: '✨' },
-                    { id: 'berserker', name: 'Berserker', emoji: '👹' },
+                    { id: 'sniper', name: 'Atirador', emoji: '🎯' },
+                    { id: 'healer', name: 'Curandeiro', emoji: '💚' },
+                    { id: 'pyro', name: 'Piromaníaco', emoji: '🔥' },
+                    { id: 'engineer', name: 'Engenheiro', emoji: '🔧' },
+                    { id: 'berserker', name: 'Berserker', emoji: '⚡' },
                     { id: 'ninja', name: 'Ninja', emoji: '🥷' },
-                    { id: 'paladin', name: 'Paladino', emoji: '⛩️' }
+                    { id: 'paladin', name: 'Paladino', emoji: '⚡' }
                 ];
                 
                 const characterGrid = document.getElementById('characterGrid');
@@ -1046,7 +1509,7 @@
                     characterCard.onclick = () => this.selectCharacter(character.id);
                     
                     characterCard.innerHTML = `
-                        <div class="character-emoji">${character.emoji}</div>
+                        <div class="character-icon">${character.emoji}</div>
                         <div class="character-name">${character.name}</div>
                     `;
                     
@@ -1059,10 +1522,12 @@
                     warrior: 'Guerreiro',
                     mage: 'Mago', 
                     archer: 'Arqueiro',
-                    knight: 'Cavaleiro',
                     assassin: 'Assassino',
                     tank: 'Tanque',
+                    sniper: 'Atirador',
                     healer: 'Curandeiro',
+                    pyro: 'Piromaníaco',
+                    engineer: 'Engenheiro',
                     berserker: 'Berserker',
                     ninja: 'Ninja',
                     paladin: 'Paladino'
@@ -1122,7 +1587,7 @@
                         break;
                         
                     case 'bullet':
-                        this.bullets.push(data.bullet);
+                        this.combat.bullets.push(data.bullet);
                         break;
                 }
             }
@@ -1230,23 +1695,62 @@
                 this.gameState = 'playing';
                 this.hideAllMenus();
                 document.getElementById('gameContainer').style.display = 'block';
+                document.getElementById('gameUI').style.display = 'block';
+                
+                // Show mobile controls if on mobile
+                if (window.innerWidth <= 768) {
+                    document.getElementById('mobileControls').style.display = 'block';
+                }
                 
                 this.canvas.width = window.innerWidth;
                 this.canvas.height = window.innerHeight;
                 
-                // Reset player
-                this.localPlayer.x = 400;
-                this.localPlayer.y = 300;
-                this.localPlayer.health = 100;
+                // Configurar jogador local com personagem selecionado
+                const myPlayer = players.find(p => p.uid === currentUser.uid);
+                if (myPlayer) {
+                    this.localPlayer.character = myPlayer.character;
+                    const stats = this.combat.getCharacterStats(myPlayer.character);
+                    this.localPlayer.health = stats.health;
+                    this.localPlayer.maxHealth = stats.health;
+                }
+                
+                // Reset posição
+                this.localPlayer.x = Math.random() * (this.canvas.width - 200) + 100;
+                this.localPlayer.y = Math.random() * (this.canvas.height - 200) + 100;
                 this.localPlayer.score = 0;
                 this.localPlayer.isAlive = true;
                 
+                // Configurar jogadores remotos
+                players.forEach(player => {
+                    if (player.uid !== currentUser.uid) {
+                        const stats = this.combat.getCharacterStats(player.character);
+                        this.remotePlayers.set(player.uid, {
+                            x: Math.random() * (this.canvas.width - 200) + 100,
+                            y: Math.random() * (this.canvas.height - 200) + 100,
+                            angle: 0,
+                            health: stats.health,
+                            maxHealth: stats.health,
+                            score: 0,
+                            isAlive: true,
+                            id: player.uid,
+                            character: player.character,
+                            color: '#ff0000',
+                            name: player.name
+                        });
+                    }
+                });
+                
+                this.updateGameUI();
                 console.log('Jogo iniciado com jogadores:', players);
             }
             
             // SAIR DA SALA
             async leaveRoom() {
                 try {
+                    // Hide game UI
+                    document.getElementById('gameUI').style.display = 'none';
+                    document.getElementById('mobileControls').style.display = 'none';
+                    
                     // Remover do Firestore
                     const roomRef = doc(db, 'rooms', roomCode);
                     const roomSnap = await getDoc(roomRef);
@@ -1289,6 +1793,12 @@
                     selectedCharacter = null;
                     roomCode = '';
                     roomData = null;
+                    
+                    // Reset game state
+                    this.gameState = 'menu';
+                    this.remotePlayers.clear();
+                    this.combat.bullets = [];
+                    this.effects.particles = [];
                     
                     this.showMainMenu();
                     
@@ -1345,8 +1855,24 @@
                 if (this.gameState !== 'playing') return;
                 
                 this.updatePlayer(deltaTime);
-                this.updateBullets(deltaTime);
+                
+                // Atualizar sistemas
+                this.combat.updateBullets(this.getAllPlayers(), this.effects);
+                this.effects.update();
+                
+                // Atualizar UI com nova informação de vida
+                this.updateGameUI();
+                
                 this.sendPlayerUpdate();
+            }
+            
+            getAllPlayers() {
+                const allPlayers = new Map();
+                allPlayers.set('local', this.localPlayer);
+                this.remotePlayers.forEach((player, id) => {
+                    allPlayers.set(id, player);
+                });
+                return allPlayers;
             }
             
             updatePlayer(deltaTime) {
@@ -1380,39 +1906,21 @@
                 this.localPlayer.angle = Math.atan2(dy, dx);
             }
             
-            updateBullets(deltaTime) {
-                const bulletSpeed = 500 * deltaTime;
-                
-                for (let i = this.bullets.length - 1; i >= 0; i--) {
-                    const bullet = this.bullets[i];
-                    
-                    bullet.x += Math.cos(bullet.angle) * bulletSpeed;
-                    bullet.y += Math.sin(bullet.angle) * bulletSpeed;
-                    
-                    // Remove bullets that are off-screen
-                    if (bullet.x < 0 || bullet.x > this.canvas.width ||
-                        bullet.y < 0 || bullet.y > this.canvas.height) {
-                        this.bullets.splice(i, 1);
-                    }
-                }
-            }
+
             
             shoot() {
-                const bullet = {
-                    x: this.localPlayer.x,
-                    y: this.localPlayer.y,
-                    angle: this.localPlayer.angle,
-                    owner: 'local'
-                };
+                if (!this.localPlayer.isAlive) return;
                 
-                this.bullets.push(bullet);
+                const bullet = this.combat.shoot(this.localPlayer, this.mouse.x, this.mouse.y);
                 
-                // Send bullet to opponent
-                if (connection && connection.open) {
-                    connection.send({
-                        type: 'bullet',
-                        bullet: bullet
-                    });
+                if (bullet) {
+                    // Send bullet to opponent
+                    if (connection && connection.open) {
+                        connection.send({
+                            type: 'bullet',
+                            bullet: bullet
+                        });
+                    }
                 }
             }
             
@@ -1436,25 +1944,132 @@
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 
                 if (this.gameState === 'playing') {
+                    // Render obstacles
+                    this.combat.renderObstacles(this.ctx);
+                    
                     // Render local player
                     if (this.localPlayer.isAlive) {
-                        this.renderPlayer(this.localPlayer, '#00ff00');
+                        this.renderPlayer(this.localPlayer, this.localPlayer.color);
                     }
                     
                     // Render remote players
                     this.remotePlayers.forEach(player => {
                         if (player.isAlive) {
-                            this.renderPlayer(player, '#ff0000');
+                            this.renderPlayer(player, player.color);
                         }
                     });
                     
-                    // Render bullets
-                    this.bullets.forEach(bullet => {
-                        this.ctx.fillStyle = '#ffffff';
-                        this.ctx.beginPath();
-                        this.ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
-                        this.ctx.fill();
+                    // Render bullets with effects
+                    this.combat.bullets.forEach(bullet => {
+                        this.effects.drawBullet(bullet);
                     });
+                    
+                    // Render UI
+                    this.renderUI();
+                }
+            }
+            
+            renderUI() {
+                // Update DOM UI instead of canvas rendering for better readability
+                this.updateGameUI();
+            }
+            
+            updateGameUI() {
+                if (this.gameState !== 'playing') return;
+                
+                const healthDisplay = document.getElementById('healthDisplay');
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                const characterDisplay = document.getElementById('characterDisplay');
+                
+                if (healthDisplay) {
+                    healthDisplay.textContent = `Vida: ${this.localPlayer.health}/${this.localPlayer.maxHealth}`;
+                }
+                
+                if (scoreDisplay) {
+                    scoreDisplay.textContent = `Score: ${this.localPlayer.score}`;
+                }
+                
+                if (characterDisplay && this.localPlayer.character) {
+                    characterDisplay.textContent = `Personagem: ${this.getCharacterName(this.localPlayer.character)}`;
+                }
+            }
+            
+            setupTouchControls() {
+                // Joystick setup
+                const joystick = document.getElementById('joystick');
+                const handle = document.getElementById('joystickHandle');
+                const shootButton = document.getElementById('shootButton');
+                
+                if (!joystick || !handle || !shootButton) return;
+                
+                let joystickActive = false;
+                let joystickCenter = { x: 0, y: 0 };
+                
+                // Joystick touch events
+                joystick.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    joystickActive = true;
+                    const rect = joystick.getBoundingClientRect();
+                    joystickCenter.x = rect.left + rect.width / 2;
+                    joystickCenter.y = rect.top + rect.height / 2;
+                });
+                
+                joystick.addEventListener('touchmove', (e) => {
+                    if (!joystickActive) return;
+                    e.preventDefault();
+                    
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - joystickCenter.x;
+                    const deltaY = touch.clientY - joystickCenter.y;
+                    
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                    const maxDistance = 25;
+                    
+                    if (distance <= maxDistance) {
+                        handle.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                    } else {
+                        const angle = Math.atan2(deltaY, deltaX);
+                        const x = Math.cos(angle) * maxDistance;
+                        const y = Math.sin(angle) * maxDistance;
+                        handle.style.transform = `translate(${x}px, ${y}px)`;
+                    }
+                    
+                    // Set movement keys
+                    const normalizedX = Math.max(-1, Math.min(1, deltaX / maxDistance));
+                    const normalizedY = Math.max(-1, Math.min(1, deltaY / maxDistance));
+                    
+                    this.keys['KeyW'] = normalizedY < -0.3;
+                    this.keys['KeyS'] = normalizedY > 0.3;
+                    this.keys['KeyA'] = normalizedX < -0.3;
+                    this.keys['KeyD'] = normalizedX > 0.3;
+                });
+                
+                joystick.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    joystickActive = false;
+                    handle.style.transform = 'translate(0px, 0px)';
+                    
+                    // Clear movement keys
+                    this.keys['KeyW'] = false;
+                    this.keys['KeyS'] = false;
+                    this.keys['KeyA'] = false;
+                    this.keys['KeyD'] = false;
+                });
+                
+                // Shoot button
+                shootButton.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (this.gameState === 'playing') {
+                        this.shoot();
+                    }
+                });
+            }
+            
+            pauseGame() {
+                if (this.gameState === 'playing') {
+                    this.gameState = 'paused';
+                    alert('Jogo pausado. Clique OK para continuar.');
+                    this.gameState = 'playing';
                 }
             }
             
